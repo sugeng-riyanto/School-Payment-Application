@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Tambah Cambridge Assessment{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Tambah Cambridge Assessment</h1>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Siswa</label>
+                <select name="student" required class="w-full px-4 py-2 border rounded-lg">
+                    {% for s in students %}
+                    <option value="{{ s.nisn }}">{{ s.full_name }} ({{ s.nisn }}) - {{ s.class_grade }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
+                <select name="exam_type" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="checkpoints">Checkpoints</option>
+                    <option value="igcse">IGCSE</option>
+                    <option value="as_level">AS Level</option>
+                    <option value="a_level">A Level</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+                <input type="text" name="subject" required class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+                <input type="number" name="amount" required class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
+                <textarea name="notes" rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-save mr-2"></i>Simpan
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

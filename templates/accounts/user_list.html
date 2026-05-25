@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load finance_extras %}
+{% block title %}Manajemen User{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Manajemen User</h1>
+        <div class="flex gap-2">
+            <a href="{% url 'accounts:export_users_xlsx' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><i class="fas fa-download mr-1"></i>Download XLSX</a>
+            <a href="{% url 'accounts:create_user' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Buat User</a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white p-3 rounded-lg shadow mb-4">
+        <form method="get" class="flex flex-wrap gap-3 items-end">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Cari</label>
+                <input type="text" name="q" value="{{ filter_q }}" placeholder="Username/Nama/Email..." class="border rounded px-3 py-1.5 text-sm w-48">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Role</label>
+                <select name="role" class="border rounded px-3 py-1.5 text-sm">
+                    <option value="">Semua</option>
+                    <option value="admin" {% if filter_role == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="tu" {% if filter_role == 'tu' %}selected{% endif %}>Tata Usaha</option>
+                    <option value="kepsek" {% if filter_role == 'kepsek' %}selected{% endif %}>Kepala Sekolah</option>
+                    <option value="vp_activity" {% if filter_role == 'vp_activity' %}selected{% endif %}>VP Activity</option>
+                    <option value="pic_teacher" {% if filter_role == 'pic_teacher' %}selected{% endif %}>PIC Teacher</option>
+                    <option value="eca_director" {% if filter_role == 'eca_director' %}selected{% endif %}>ECA Director</option>
+                    <option value="parent" {% if filter_role == 'parent' %}selected{% endif %}>Parent</option>
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700"><i class="fas fa-search mr-1"></i>Filter</button>
+                <a href="{% url 'accounts:user_list' %}" class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded text-sm hover:bg-gray-300 ml-1">Reset</a>
+            </div>
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <input type="hidden" name="dir" value="{{ dir }}">
+        </form>
+    </div>
+
+    <!-- Sort Toggles -->
+    <div class="flex items-center gap-2 mb-2 text-sm text-gray-600">
+        <span class="font-medium">Urut:</span>
+        {% for label, field in sort_options.items %}
+        <a href="?q={{ filter_q }}&role={{ filter_role }}&sort={{ field }}&dir={% if sort == field and dir == 'asc' %}desc{% else %}asc{% endif %}" class="px-2 py-1 rounded {% if sort == field %}bg-blue-100 text-blue-700 font-medium{% else %}hover:bg-gray-100{% endif %}">
+            {{ label }} {% if sort == field %}<i class="fas fa-caret-{% if dir == 'asc' %}up{% else %}down{% endif %}"></i>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="w-full text-left">
+            <thead><tr class="bg-gray-100"><th class="p-3">Username</th><th class="p-3">Nama</th><th class="p-3">Role</th><th class="p-3">Jenjang</th><th class="p-3">Email</th><th class="p-3">HP</th><th class="p-3">Password Default</th><th class="p-3">Aksi</th></tr></thead>
+            <tbody>
+                {% for u in users %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3 font-medium">{{ u.username }}</td>
+                    <td class="p-3">{{ u.get_full_name|default:'-' }}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs bg-gray-100">{{ u.get_role_display }}</span></td>
+                    <td class="p-3 text-sm">{{ u.assigned_level|default:'Semua'|upper }}</td>
+                    <td class="p-3">
+                        <span class="masked" id="email-{{ u.id }}">{{ u.email|default:'-'|mask_email }}</span>
+                        <span class="plain hidden" id="email-plain-{{ u.id }}">{{ u.email|default:'-' }}</span>
+                        <button onclick="toggleField('email-{{ u.id }}', 'email-plain-{{ u.id }}', this)" class="text-xs text-blue-600 hover:text-blue-800 ml-1"><i class="fas fa-eye"></i></button>
+                    </td>
+                    <td class="p-3">
+                        <span class="masked" id="hp-{{ u.id }}">{{ u.phone|default:'-'|mask }}</span>
+                        <span class="plain hidden" id="hp-plain-{{ u.id }}">{{ u.phone|default:'-' }}</span>
+                        <button onclick="toggleField('hp-{{ u.id }}', 'hp-plain-{{ u.id }}', this)" class="text-xs text-blue-600 hover:text-blue-800 ml-1"><i class="fas fa-eye"></i></button>
+                    </td>
+                    <td class="p-3">
+                        <span class="masked" id="pw-{{ u.id }}">***</span>
+                        <span class="plain hidden" id="pw-plain-{{ u.id }}">{% if u.role == 'parent' %}siswa123{% elif u.role == 'pic_teacher' %}pic123{% elif u.role == 'kepsek' %}kepsek123{% elif u.role == 'vp_activity' %}vp123{% elif u.role == 'eca_director' %}eca123{% elif u.role == 'tu' %}tu123{% elif u.role == 'admin' %}admin123{% else %}default123{% endif %}</span>
+                        <button onclick="toggleField('pw-{{ u.id }}', 'pw-plain-{{ u.id }}', this)" class="text-xs text-blue-600 hover:text-blue-800 ml-1"><i class="fas fa-eye"></i></button>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex gap-2">
+                            <a href="{% url 'accounts:edit_user' u.id %}" class="text-blue-600 hover:text-blue-800 text-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'accounts:reset_password' u.id %}" class="text-yellow-600 hover:text-yellow-800 text-sm" title="Reset Password" onclick="return confirm('Reset password {{ u.username }} ke default?')"><i class="fas fa-key"></i></a>
+                            {% if u != request.user %}
+                            <a href="{% url 'accounts:delete_user' u.id %}" class="text-red-600 hover:text-red-800 text-sm" title="Hapus" onclick="return confirm('Hapus user {{ u.username }}? SEMUA DATA terkait (tagihan, transaksi, nilai ECA, kegiatan) akan ikut terhapus secara permanen.')"><i class="fas fa-trash"></i></a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="p-6 text-center text-gray-500">Tidak ada user ditemukan.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-xs text-gray-400 mt-2">{{ users|length }} user(s) ditemukan.</p>
+</div>
+<script>
+function toggleField(maskedId, plainId, btn) {
+    const masked = document.getElementById(maskedId);
+    const plain = document.getElementById(plainId);
+    if (masked.classList.contains('hidden')) {
+        masked.classList.remove('hidden');
+        plain.classList.add('hidden');
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
+    } else {
+        masked.classList.add('hidden');
+        plain.classList.remove('hidden');
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    }
+}
+</script>
+<style>
+.hidden { display: none; }
+</style>
+{% endblock %}

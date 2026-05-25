@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Cambridge Assessment{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Cambridge Assessment</h1>
+        <div class="flex gap-2 flex-wrap">
+            <a href="{% url 'finance:create_cambridge' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"><i class="fas fa-plus mr-1"></i>Tambah</a>
+            <a href="{% url 'finance:export_cambridge_xlsx' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+            <a href="{% url 'finance:export_cambridge_pdf' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+            <a href="{% url 'finance:import_cambridge' %}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"><i class="fas fa-upload mr-1"></i>Import XLSX</a>
+        </div>
+    </div>
+
+    <div class="mb-4 flex gap-2 flex-wrap items-center">
+        <a href="{% url 'finance:cambridge_list' %}?status=all" class="px-4 py-2 rounded-lg text-sm font-medium {% if current_status == 'all' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">Semua ({{ counts.all }})</a>
+        <a href="{% url 'finance:cambridge_list' %}?status=paid" class="px-4 py-2 rounded-lg text-sm font-medium {% if current_status == 'paid' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">Lunas ({{ counts.paid }})</a>
+        <a href="{% url 'finance:cambridge_list' %}?status=unpaid" class="px-4 py-2 rounded-lg text-sm font-medium {% if current_status == 'unpaid' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">Belum ({{ counts.unpaid }})</a>
+        <div class="flex-grow"></div>
+        <form method="get" class="flex gap-2 items-center">
+            <input type="hidden" name="status" value="{{ current_status }}">
+            <select name="sort" class="border rounded-lg p-2 text-sm" onchange="this.form.submit()">
+                <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Terbaru</option>
+                <option value="name" {% if current_sort == 'name' %}selected{% endif %}>A-Z</option>
+                <option value="-name" {% if current_sort == '-name' %}selected{% endif %}>Z-A</option>
+            </select>
+            <input type="text" name="student" placeholder="Cari nama..." value="{{ request.GET.student|default:'' }}" class="border rounded-lg p-2 text-sm">
+            <button type="submit" class="bg-gray-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-700"><i class="fas fa-search"></i></button>
+            <a href="?status={{ current_status }}&sort={{ current_sort }}&download=pdf" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+            <a href="?status={{ current_status }}&sort={{ current_sort }}&download=xlsx" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left p-3">NISN</th>
+                        <th class="text-left p-3">Nama</th>
+                        <th class="text-left p-3">Kelas</th>
+                        <th class="text-left p-3">Exam</th>
+                        <th class="text-left p-3">Subject</th>
+                        <th class="text-left p-3">Nominal</th>
+                        <th class="text-left p-3">Status</th>
+                        <th class="text-left p-3">Tgl Daftar</th>
+                        <th class="text-left p-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ca in exams %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3">{{ ca.student.nisn }}</td>
+                        <td class="p-3">{{ ca.student.full_name }}{% if not ca.student.is_active %} <span class="text-red-500 text-xs font-semibold">(LULUS)</span>{% endif %}</td>
+                        <td class="p-3">{{ ca.student.class_grade }}</td>
+                        <td class="p-3">{{ ca.get_exam_type_display }}</td>
+                        <td class="p-3">{{ ca.subject }}</td>
+                        <td class="p-3">Rp{{ ca.amount|floatformat:0 }}</td>
+                        <td class="p-3">
+                            {% if ca.is_paid %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Lunas</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Belum</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">{{ ca.created_at|date:"d/m/Y"|default:"-" }}</td>
+                        <td class="p-3 flex gap-1">
+                            <a href="{% url 'finance:edit_cambridge' ca.id %}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"><i class="fas fa-edit mr-1"></i>Edit</a>
+                            <a href="{% url 'finance:delete_cambridge' ca.id %}" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700" onclick="return confirm('Hapus data ini?')"><i class="fas fa-trash mr-1"></i>Hapus</a>
+                            {% if not ca.is_paid %}
+                            <a href="{% url 'finance:confirm_cambridge' ca.id %}" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"><i class="fas fa-check mr-1"></i>Konfirmasi</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" class="p-4 text-center text-gray-500">Belum ada data</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load finance_extras %}
+{% block title %}Tagihan & Riwayat Pembayaran{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Tagihan & Riwayat Pembayaran</h1>
+
+    <div class="flex justify-end gap-2 mb-4">
+        <a href="{% url 'payments:export_history_pdf' %}" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+    </div>
+
+    {% if bank_account and unpaid_va_bills %}
+    <div style="display:none;"></div>
+    {% endif %}
+
+    <!-- SPP Bills -->
+    <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-book text-blue-600 mr-2"></i>Tagihan SPP</h2>
+        <p class="text-sm text-gray-500 mb-4">Pembayaran SPP dilakukan melalui Virtual Account yang diupload oleh Tata Usaha.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left p-3">Bulan</th>
+                        <th class="text-left p-3">Tahun</th>
+                        <th class="text-left p-3">Jumlah</th>
+                        <th class="text-left p-3">Virtual Account</th>
+                        <th class="text-left p-3">Invoice Tagihan <span class="text-xs text-gray-400 font-normal" title="Download invoice tagihan SPP (PDF dengan QR)">ⓘ</span></th>
+                        <th class="text-left p-3">Invoice Penerimaan <span class="text-xs text-gray-400 font-normal" title="Download bukti penerimaan pembayaran (PDF dengan QR) setelah dikonfirmasi TU">ⓘ</span></th>
+                        <th class="text-left p-3">Status</th>
+                        <th class="text-left p-3">Preview</th>
+                        <th class="text-left p-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in spp_bills %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">{{ bill.get_month_display }}</td>
+                        <td class="p-3">{{ bill.year }}</td>
+                        <td class="p-3">Rp{{ bill.amount|floatformat:0 }}</td>
+                        <td class="p-3 font-mono text-sm">{{ bill.virtual_account|default:"-" }}</td>
+                        <td class="p-3">
+                            <a href="{% url 'payments:download_bill_invoice' bill.id %}" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </td>
+                        <td class="p-3">
+                            {% with tx_id=bill_tx_map|get_item:bill.id %}
+                            {% if tx_id and bill.is_paid %}
+                            <a href="{% url 'payments:download_invoice' tx_id %}" class="text-green-600 hover:text-green-800 text-sm flex items-center gap-1">
+                                <i class="fas fa-file-pdf"></i> Penerimaan
+                            </a>
+                            {% else %}
+                            <span class="text-gray-400 text-sm">-</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="p-3">
+                            {% if bill.is_paid %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Lunas</span>
+                            {% elif bill.id in proofed_bills %}
+                                {% if bill.id in verified_bills %}
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Lunas</span>
+                                {% else %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Diproses</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Belum</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            {% with image_url=proof_images|get_item:bill.id %}
+                            {% if image_url %}
+                            <img src="{{ image_url }}" class="w-10 h-10 object-cover rounded cursor-pointer border" onclick="showPreview('{{ image_url }}')" alt="Bukti">
+                            {% else %}
+                            <span class="text-gray-400 text-sm">-</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="p-3">
+                            <div class="flex items-center gap-2">
+                                {% if bill.virtual_account %}
+                                <button onclick="copyVA('{{ bill.virtual_account }}', this)" class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                                    <i class="fas fa-copy"></i> Salin VA
+                                </button>
+                                {% endif %}
+                                {% if bill.id in verified_bills %}
+                                <span class="text-xs text-green-600"><i class="fas fa-check-circle"></i> Lunas</span>
+                                {% elif bill.id in proofed_bills %}
+                                <div class="flex items-center gap-1">
+                                    <a href="{% url 'payments:upload_proof' bill.id %}" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                        <i class="fas fa-sync"></i> Upload Ulang
+                                    </a>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'payments:upload_proof' bill.id %}" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                    <i class="fas fa-upload"></i> Upload Bukti
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="p-4 text-center text-gray-500">Tidak ada tagihan SPP</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Payment Sections -->
+    <div class="grid grid-cols-1 gap-6">
+
+        <!-- ECA -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-3"><i class="fas fa-music text-green-600 mr-2"></i>ECA (Ekstrakurikuler)</h2>
+            <p class="text-sm text-gray-500 mb-3">Pembayaran ECA menggunakan <strong>Midtrans</strong> (Virtual Account / Kartu Kredit).</p>
+
+            {% if eca_regs %}
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Tagihan Belum Dibayar:</h3>
+            <div class="space-y-2 mb-4">
+                {% for reg in eca_regs %}
+                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div>
+                        <span class="font-medium">{{ reg.program.name }}</span>
+                        <span class="text-sm text-gray-500 ml-2">Rp{{ reg.program.price|floatformat:0 }}</span>
+                    </div>
+                    <a href="{% url 'payments:eca_payment' reg.id %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">
+                        <i class="fas fa-credit-card mr-1"></i>Bayar via Midtrans
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Riwayat Pembayaran:</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b"><th class="p-2 text-left">Order ID</th><th class="p-2 text-left">Jumlah</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">VA</th><th class="p-2 text-left">Invoice</th><th class="p-2 text-left">Tanggal</th><th class="p-2 text-left">Aksi</th></tr></thead>
+                    <tbody>
+                        {% for t in eca_tx %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2 font-mono text-xs">{{ t.midtrans_order_id|default:"-" }}</td>
+                            <td class="p-2">Rp{{ t.amount|floatformat:0 }}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs {% if t.status == 'success' %}bg-green-100 text-green-800{% elif t.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ t.get_status_display }}</span></td>
+                            <td class="p-2">{% if t.virtual_account %}<a href="{% url 'payments:download_va' t.id %}" class="text-blue-600 hover:underline text-xs" target="_blank"><i class="fas fa-download"></i> VA</a>{% endif %}</td>
+                            <td class="p-2">{% if t.invoice_number %}<a href="{% url 'payments:download_invoice' t.id %}" class="text-green-600 hover:underline text-xs" target="_blank"><i class="fas fa-file-pdf"></i> Penerimaan</a>{% endif %}</td>
+                            <td class="p-2">{{ t.created_at|date:"d/m/Y H:i" }}</td>
+                            <td class="p-2">
+                                {% if t.id in verified_txs %}
+                                <span class="text-xs text-green-600"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                                {% elif t.id in proofed_txs %}
+                                <div class="flex gap-1">
+                                    <span class="text-xs text-yellow-600"><i class="fas fa-clock"></i> Diproses</span>
+                                    <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                        <i class="fas fa-sync"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                    <i class="fas fa-upload"></i> Upload Bukti
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}<tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada transaksi ECA</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Cambridge -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-3"><i class="fas fa-flask text-red-600 mr-2"></i>Cambridge Assessment</h2>
+            <p class="text-sm text-gray-500 mb-3">Pembayaran Cambridge Assessment menggunakan <strong>Midtrans</strong> (Virtual Account / Kartu Kredit).</p>
+
+            {% if cam_unpaid %}
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Tagihan Belum Dibayar:</h3>
+            <div class="space-y-2 mb-4">
+                {% for ca in cam_unpaid %}
+                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div>
+                        <span class="font-medium">{{ ca.get_exam_type_display }} - {{ ca.subject }}</span>
+                        <span class="text-sm text-gray-500 ml-2">Rp{{ ca.amount|floatformat:0 }}</span>
+                    </div>
+                    <a href="{% url 'payments:cambridge_payment' ca.id %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">
+                        <i class="fas fa-credit-card mr-1"></i>Bayar via Midtrans
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Riwayat Pembayaran:</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b"><th class="p-2 text-left">Exam</th><th class="p-2 text-left">Subject</th><th class="p-2 text-left">Jumlah</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">VA</th><th class="p-2 text-left">Invoice</th><th class="p-2 text-left">Aksi</th></tr></thead>
+                    <tbody>
+                        {% for t in cam_tx %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2">{{ t.cambridge_assessment.exam_type|default:t.midtrans_order_id|default:"-" }}</td>
+                            <td class="p-2">{{ t.cambridge_assessment.subject|default:"-" }}</td>
+                            <td class="p-2">Rp{{ t.amount|floatformat:0 }}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs {% if t.status == 'success' %}bg-green-100 text-green-800{% elif t.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ t.get_status_display }}</span></td>
+                            <td class="p-2">{% if t.virtual_account %}<a href="{% url 'payments:download_va' t.id %}" class="text-blue-600 hover:underline text-xs" target="_blank"><i class="fas fa-download"></i> VA</a>{% endif %}</td>
+                            <td class="p-2">{% if t.invoice_number %}<a href="{% url 'payments:download_invoice' t.id %}" class="text-green-600 hover:underline text-xs" target="_blank"><i class="fas fa-file-pdf"></i> Penerimaan</a>{% endif %}</td>
+                            <td class="p-2">
+                                {% if t.id in verified_txs %}
+                                <span class="text-xs text-green-600"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                                {% elif t.id in proofed_txs %}
+                                <div class="flex gap-1">
+                                    <span class="text-xs text-yellow-600"><i class="fas fa-clock"></i> Diproses</span>
+                                    <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                        <i class="fas fa-sync"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                    <i class="fas fa-upload"></i> Upload Bukti
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}<tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada transaksi Cambridge</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DPP Pembangunan -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-3"><i class="fas fa-building text-purple-600 mr-2"></i>DPP Pembangunan</h2>
+            <p class="text-sm text-gray-500 mb-3">Pembayaran DPP dapat dilakukan melalui transfer ke rekening <strong>Bank NISP</strong> atau <strong>BNI</strong> (konfirmasi ke Admin untuk detail rekening).</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b"><th class="p-2 text-left">Order ID</th><th class="p-2 text-left">Jumlah</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">VA/NISP</th><th class="p-2 text-left">Invoice</th><th class="p-2 text-left">Tanggal</th><th class="p-2 text-left">Aksi</th></tr></thead>
+                    <tbody>
+                        {% for t in dpp_tx %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2 font-mono text-xs">{{ t.midtrans_order_id|default:"-" }}</td>
+                            <td class="p-2">Rp{{ t.amount|floatformat:0 }}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs {% if t.status == 'success' %}bg-green-100 text-green-800{% elif t.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ t.get_status_display }}</span></td>
+                            <td class="p-2 font-mono text-xs">{{ t.virtual_account|default:"-" }}</td>
+                            <td class="p-2">{% if t.invoice_number %}<a href="{% url 'payments:download_invoice' t.id %}" class="text-green-600 hover:underline text-xs" target="_blank"><i class="fas fa-file-pdf"></i> Penerimaan</a>{% endif %}</td>
+                            <td class="p-2">{{ t.created_at|date:"d/m/Y H:i" }}</td>
+                            <td class="p-2">
+                                {% if t.id in verified_txs %}
+                                <span class="text-xs text-green-600"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                                {% elif t.id in proofed_txs %}
+                                <div class="flex gap-1">
+                                    <span class="text-xs text-yellow-600"><i class="fas fa-clock"></i> Diproses</span>
+                                    <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                        <i class="fas fa-sync"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                    <i class="fas fa-upload"></i> Upload Bukti
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}<tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada transaksi DPP</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Uang Kegiatan -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-3"><i class="fas fa-running text-orange-600 mr-2"></i>Uang Kegiatan</h2>
+            <p class="text-sm text-gray-500 mb-3">Pembayaran Uang Kegiatan dapat dilakukan melalui transfer ke rekening <strong>Bank NISP</strong> atau <strong>BNI</strong> (konfirmasi ke Admin untuk detail rekening).</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b"><th class="p-2 text-left">Order ID</th><th class="p-2 text-left">Jumlah</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">VA/NISP</th><th class="p-2 text-left">Invoice</th><th class="p-2 text-left">Tanggal</th><th class="p-2 text-left">Aksi</th></tr></thead>
+                    <tbody>
+                        {% for t in kegiatan_tx %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2 font-mono text-xs">{{ t.midtrans_order_id|default:"-" }}</td>
+                            <td class="p-2">Rp{{ t.amount|floatformat:0 }}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs {% if t.status == 'success' %}bg-green-100 text-green-800{% elif t.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ t.get_status_display }}</span></td>
+                            <td class="p-2 font-mono text-xs">{{ t.virtual_account|default:"-" }}</td>
+                            <td class="p-2">{% if t.invoice_number %}<a href="{% url 'payments:download_invoice' t.id %}" class="text-green-600 hover:underline text-xs" target="_blank"><i class="fas fa-file-pdf"></i> Penerimaan</a>{% endif %}</td>
+                            <td class="p-2">{{ t.created_at|date:"d/m/Y H:i" }}</td>
+                            <td class="p-2">
+                                {% if t.id in verified_txs %}
+                                <span class="text-xs text-green-600"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                                {% elif t.id in proofed_txs %}
+                                <div class="flex gap-1">
+                                    <span class="text-xs text-yellow-600"><i class="fas fa-clock"></i> Diproses</span>
+                                    <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                        <i class="fas fa-sync"></i>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'payments:upload_proof_tx' t.id %}" class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200">
+                                    <i class="fas fa-upload"></i> Upload Bukti
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}<tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada transaksi Uang Kegiatan</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center" onclick="closePreview()">
+    <span class="absolute top-4 right-4 text-white text-3xl cursor-pointer hover:text-gray-300 z-50" onclick="closePreview()">&times;</span>
+    <img id="modalImage" class="max-w-[90%] max-h-[90%] object-contain rounded-lg shadow-2xl">
+</div>
+<script>
+function showPreview(url) {
+    document.getElementById('modalImage').src = url;
+    document.getElementById('imageModal').classList.remove('hidden');
+    document.getElementById('imageModal').classList.add('flex');
+}
+function closePreview() {
+    document.getElementById('imageModal').classList.add('hidden');
+    document.getElementById('imageModal').classList.remove('flex');
+    document.getElementById('modalImage').src = '';
+}
+function copyVA(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<i class="fas fa-check"></i> Tersalin';
+        btn.classList.remove('bg-blue-100', 'text-blue-700');
+        btn.classList.add('bg-green-100', 'text-green-700');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-copy"></i> Salin VA';
+            btn.classList.remove('bg-green-100', 'text-green-700');
+            btn.classList.add('bg-blue-100', 'text-blue-700');
+        }, 2500);
+    });
+}
+function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const span = btn.querySelector('span');
+        if (span) { span.textContent = 'Tersalin!'; }
+        btn.classList.add('bg-green-500/30');
+        setTimeout(() => {
+            if (span) { span.textContent = 'Salin'; }
+            btn.classList.remove('bg-green-500/30');
+        }, 2000);
+    });
+}
+function dismissOverlay() {
+    const el = document.getElementById('bankInfoOverlay');
+    if (el) { el.style.display = 'none'; }
+}
+</script>
+{% endblock %}

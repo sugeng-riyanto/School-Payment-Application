@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Review Pembayaran ECA{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Review Pembayaran ECA</h1>
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <p><strong>Siswa:</strong> {{ payment.registration.student.full_name }}</p>
+            <p><strong>Program:</strong> {{ payment.registration.program.name }}</p>
+            <p><strong>Tagihan:</strong> Rp{{ payment.amount|floatformat:0 }}</p>
+            <p><strong>Dibayarkan:</strong> Rp{{ payment.paid_amount|floatformat:0 }}</p>
+            <p><strong>Status:</strong> <span class="px-2 py-0.5 rounded text-xs {% if payment.payment_status == 'approved' %}bg-green-100 text-green-700{% elif payment.payment_status == 'rejected' %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">{{ payment.get_payment_status_display }}</span></p>
+        </div>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium mb-1">Jumlah Dibayarkan (Rp)</label>
+                <input type="number" name="paid_amount" value="{{ payment.paid_amount|default:payment.amount }}" class="w-full border rounded px-4 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Catatan</label>
+                <textarea name="notes" rows="3" class="w-full border rounded px-4 py-2">{{ payment.payment_notes }}</textarea>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" name="action" value="approved" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"><i class="fas fa-check mr-1"></i>Terima</button>
+                <button type="submit" name="action" value="revised" class="flex-1 bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600"><i class="fas fa-edit mr-1"></i>Revisi</button>
+                <button type="submit" name="action" value="rejected" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"><i class="fas fa-times mr-1"></i>Tolak</button>
+            </div>
+        </form>
+        <a href="{% url 'eca:eca_payment_list' %}" class="mt-4 inline-block text-blue-600 hover:underline text-sm"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+    </div>
+</div>
+{% endblock %}

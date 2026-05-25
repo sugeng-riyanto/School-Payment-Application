@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Upload VA SPP{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <div class="flex justify-between items-start mb-6">
+            <h1 class="text-2xl font-bold">Upload Virtual Account SPP</h1>
+            <a href="{% url 'finance:spp_va_template' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                <i class="fas fa-download mr-1"></i>Download Template
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="p-4 bg-blue-50 rounded-lg text-sm">
+                <p class="font-medium mb-2">Format Lama (NIS + VA):</p>
+                <table class="w-full text-xs border-collapse">
+                    <tr><th class="border px-2 py-1 bg-blue-100">NIS</th><th class="border px-2 py-1 bg-blue-100">virtual_account</th></tr>
+                    <tr><td class="border px-2 py-1">12345</td><td class="border px-2 py-1">VA123456</td></tr>
+                </table>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg text-sm">
+                <p class="font-medium mb-2">Format Baru (Lengkap):</p>
+                <p class="text-xs text-gray-500 mb-1">Kolom: Subject, Grade, virtual_account, customer_name, customer_email, trx_amount, expired_date, expired_time, description, link</p>
+                <table class="w-full text-xs border-collapse">
+                    <tr>
+                        <th class="border px-1 py-1 bg-green-100">Subject</th>
+                        <th class="border px-1 py-1 bg-green-100">Grade</th>
+                        <th class="border px-1 py-1 bg-green-100">virtual_account</th>
+                        <th class="border px-1 py-1 bg-green-100">customer_name</th>
+                        <th class="border px-1 py-1 bg-green-100">customer_email</th>
+                        <th class="border px-1 py-1 bg-green-100">trx_amount</th>
+                    </tr>
+                    <tr>
+                        <td class="border px-1 py-1">SPP</td>
+                        <td class="border px-1 py-1">7A</td>
+                        <td class="border px-1 py-1">VA123</td>
+                        <td class="border px-1 py-1">Gilang Santoso</td>
+                        <td class="border px-1 py-1">parent@email.com</td>
+                        <td class="border px-1 py-1">500000</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".xlsx,.xls" required class="w-full px-4 py-2 border rounded-lg">
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-upload mr-2"></i>Upload VA
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

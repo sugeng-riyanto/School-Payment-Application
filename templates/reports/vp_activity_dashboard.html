@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard VP Activity{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Dashboard VP Activity</h1>
+
+    {% if pending_reviews %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-lg">
+        <p class="font-semibold text-yellow-800"><i class="fas fa-clipboard-check mr-1"></i>{{ pending_reviews|length }} Laporan menunggu review</p>
+        <div class="mt-2 space-y-1">
+            {% for act in pending_reviews %}
+            <a href="{% url 'activities:review' act.slug %}" class="block text-yellow-700 hover:text-yellow-900 text-sm">
+                <i class="fas fa-arrow-right mr-1"></i>{{ act.title }} ({{ act.get_status_display }})
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <i class="fas fa-clipboard-list text-3xl text-blue-500 mb-2"></i>
+            <div class="text-2xl font-bold">{{ total_activities|default:"0" }}</div>
+            <div class="text-gray-500">Laporan Kegiatan</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <i class="fas fa-running text-3xl text-green-500 mb-2"></i>
+            <div class="text-2xl font-bold">{{ total_eca|default:"0" }}</div>
+            <div class="text-gray-500">Program ECA Aktif</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <i class="fas fa-users text-3xl text-purple-500 mb-2"></i>
+            <div class="text-2xl font-bold">{{ total_participants|default:"0" }}</div>
+            <div class="text-gray-500">Peserta Kegiatan</div>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Distribusi ECA</h2>
+            <canvas id="ecaDist" height="200"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Aktivitas Terbaru</h2>
+            <div class="space-y-3">
+                {% for activity in recent_activities %}
+                <a href="{% url 'activities:detail' activity.slug %}" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                    <p class="font-medium">{{ activity.title }}</p>
+                    <p class="text-sm text-gray-500">{{ activity.start_date|date:"d M Y" }}</p>
+                </a>
+                {% empty %}
+                <p class="text-gray-500">Belum ada aktivitas</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('ecaDist'), {
+    type: 'pie', data: {
+        labels: {{ vp_eca_labels|default:'[]'|safe }},
+        datasets: [{data:{{ vp_eca_values|default:'[]'|safe }}, backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6']}]
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Informasi Personal{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold"><i class="fas fa-user-circle text-blue-600 mr-2"></i>Informasi Personal</h1>
+        <a href="{% url 'accounts:internal_info_list' %}" class="text-blue-600 hover:underline text-sm"><i class="fas fa-info-circle mr-1"></i>Lihat Informasi Internal Sekolah</a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4"><i class="fas fa-file-invoice-dollar text-green-600 mr-2"></i>Tagihan</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="font-semibold text-blue-800">SPP</div>
+                <div class="text-sm text-blue-600 mt-1">
+                    Lunas: {{ paid_count }} tagihan&nbsp;&nbsp;|&nbsp;&nbsp;
+                    Belum: {{ unpaid_count }} tagihan
+                </div>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg">
+                <div class="font-semibold text-purple-800">DPP</div>
+                <div class="text-sm text-purple-600 mt-1">{{ dpp_list|length }} tagihan</div>
+            </div>
+        </div>
+
+        {% if spp_bills %}
+        <div class="overflow-x-auto mb-4">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="text-left p-2">Siswa</th>
+                        <th class="text-left p-2">Bulan</th>
+                        <th class="text-left p-2">Tahun</th>
+                        <th class="text-right p-2">Nominal</th>
+                        <th class="text-center p-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in spp_bills %}
+                    <tr class="border-t">
+                        <td class="p-2">{{ bill.student.full_name }}</td>
+                        <td class="p-2">{{ bill.get_month_display }}</td>
+                        <td class="p-2">{{ bill.year }}</td>
+                        <td class="p-2 text-right">Rp{{ bill.amount|floatformat:0 }}</td>
+                        <td class="p-2 text-center">
+                            {% if bill.is_paid %}
+                            <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">Lunas</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">Belum</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if dpp_list or eca_unpaid or cam_unpaid %}
+        <h3 class="font-semibold mb-2">Tagihan Lainnya</h3>
+        <div class="space-y-2">
+            {% for dpp in dpp_list %}
+            <div class="flex justify-between items-center border-b pb-2">
+                <span class="text-sm">{{ dpp.student.full_name }} - {{ dpp.description|default:"DPP" }}</span>
+                <span class="text-sm font-semibold">Rp{{ dpp.amount|floatformat:0 }}</span>
+                <span class="text-xs {% if dpp.is_paid %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if dpp.is_paid %}Lunas{% else %}Belum{% endif %}
+                </span>
+            </div>
+            {% endfor %}
+            {% for reg in eca_unpaid %}
+            <div class="flex justify-between items-center border-b pb-2">
+                <span class="text-sm">{{ reg.student.full_name }} - {{ reg.program.name }} (ECA)</span>
+                <span class="text-sm font-semibold">Rp{{ reg.program.price|floatformat:0 }}</span>
+                <span class="text-xs text-red-600">Belum</span>
+            </div>
+            {% endfor %}
+            {% for cam in cam_unpaid %}
+            <div class="flex justify-between items-center border-b pb-2">
+                <span class="text-sm">{{ cam.student.full_name }} - Cambridge {{ cam.subject }}</span>
+                <span class="text-sm font-semibold">Rp{{ cam.amount|floatformat:0 }}</span>
+                <span class="text-xs text-red-600">Belum</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <a href="{% url 'payments:history' %}" class="inline-block mt-4 text-blue-600 text-sm hover:underline"><i class="fas fa-external-link-alt mr-1"></i>Lihat Semua Tagihan</a>
+    </div>
+
+    <h2 class="text-lg font-semibold mb-3"><i class="fas fa-envelope text-blue-600 mr-2"></i>Pesan dari Sekolah</h2>
+    {% if blast_logs %}
+    <div class="space-y-4">
+        {% for log in blast_logs %}
+        <div class="bg-white rounded-xl shadow-md p-5 border-l-4 {% if not log.is_read %}border-blue-500{% else %}border-gray-300{% endif %}">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h3 class="font-semibold text-gray-800 text-lg">{{ log.subject }}</h3>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                        <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">{{ log.get_payment_type_display }}</span>
+                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs"><i class="far fa-clock mr-1"></i>{{ log.sent_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    {% if not log.is_read %}
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold"><i class="fas fa-envelope mr-1"></i>Belum Dibaca</span>
+                    {% else %}
+                    <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs"><i class="fas fa-envelope-open mr-1"></i>Sudah Dibaca</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-3 text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">{{ log.body }}</div>
+            {% if log.is_read and log.read_at %}
+            <div class="mt-2 text-xs text-gray-400"><i class="far fa-eye mr-1"></i>Dibaca pada {{ log.read_at|date:"d/m/Y H:i" }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
+        <i class="fas fa-inbox text-4xl text-gray-300 mb-3 block"></i>
+        Belum ada informasi personal
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% block title %}Selamat Datang{% endblock %}
+{% block content %}
+<!-- HERO -->
+<section class="hero-gradient text-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    {% if school.logo %}
+                    <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="h-16 w-16 rounded-full border-2 border-white/30 shadow-lg">
+                    {% endif %}
+                    <div>
+                        <h1 class="text-4xl md:text-5xl font-bold">{{ school.name|default:'Sekolah' }}</h1>
+                        <p class="text-blue-200 text-lg mt-1">Portal Informasi Akademik</p>
+                    </div>
+                </div>
+                {% if school.accreditation %}
+                <span class="inline-block bg-white/20 backdrop-blur px-4 py-1 rounded-full text-sm mb-4">{{ school.accreditation }}</span>
+                {% endif %}
+                <p class="text-blue-100 text-lg leading-relaxed mb-8 max-w-xl">
+                    Selamat datang di portal resmi {{ school.name|default:'sekolah kami' }}. 
+                    Temukan informasi akademik, kurikulum, dan layanan pembayaran secara online.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="{% url 'public_info:school_profile' %}" class="bg-white text-blue-700 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition shadow-lg">
+                        <i class="fas fa-info-circle mr-2"></i>Profil Sekolah
+                    </a>
+                    <a href="{% url 'public_info:curriculum' %}" class="bg-white/20 backdrop-blur text-white px-6 py-3 rounded-lg font-medium hover:bg-white/30 transition">
+                        <i class="fas fa-book mr-2"></i>Kurikulum
+                    </a>
+                    <a href="{% url 'public_info:calendar' %}" class="bg-white/20 backdrop-blur text-white px-6 py-3 rounded-lg font-medium hover:bg-white/30 transition">
+                        <i class="fas fa-calendar mr-2"></i>Kalender Akademik
+                    </a>
+                    <a href="{% url 'public_info:verify_invoice' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition shadow-lg">
+                        <i class="fas fa-shield-alt mr-2"></i>Verifikasi Dokumen
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <div class="bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20">
+                    <div class="text-center">
+                        <i class="fas fa-graduation-cap text-6xl text-blue-200 mb-4"></i>
+                        <p class="text-xl font-semibold">Unggul dalam Prestasi</p>
+                        <p class="text-blue-200 mt-2">Berdasarkan nilai-nilai luhur bangsa</p>
+                    </div>
+                    {% if school.vision %}
+                    <div class="mt-6 p-4 bg-white/10 rounded-lg">
+                        <p class="text-sm text-blue-100"><strong>Visi:</strong> {{ school.vision|truncatewords:20 }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="h-8 bg-gradient-to-b from-transparent to-gray-50"></div>
+</section>
+
+<!-- STATS -->
+{% if school.accreditation or True %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+            <i class="fas fa-school text-3xl text-blue-600 mb-2"></i>
+            <div class="text-2xl font-bold">SD - SMA</div>
+            <div class="text-sm text-gray-500">Jenjang Pendidikan</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+            <i class="fas fa-chalkboard-teacher text-3xl text-green-600 mb-2"></i>
+            <div class="text-2xl font-bold">Profesional</div>
+            <div class="text-sm text-gray-500">Tenaga Pendidik</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+            <i class="fas fa-book-open text-3xl text-purple-600 mb-2"></i>
+            <div class="text-2xl font-bold">Terpadu</div>
+            <div class="text-sm text-gray-500">Kurikulum Nasional+</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+            <i class="fas fa-user-graduate text-3xl text-orange-600 mb-2"></i>
+            <div class="text-2xl font-bold">Berprestasi</div>
+            <div class="text-sm text-gray-500">Akademik & Non-Akademik</div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- FEATURES -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h2 class="text-3xl font-bold text-center mb-12">Jelajahi Informasi Sekolah</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+        <a href="{% url 'public_info:school_profile' %}" class="bg-white rounded-xl shadow-md p-8 card-hover group">
+            <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 transition">
+                <i class="fas fa-info-circle text-2xl text-blue-600 group-hover:text-white transition"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Profil & Identitas</h3>
+            <p class="text-gray-500 text-sm">Visi, misi, sejarah, akreditasi, dan informasi kontak sekolah.</p>
+        </a>
+        <a href="{% url 'public_info:curriculum' %}" class="bg-white rounded-xl shadow-md p-8 card-hover group">
+            <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-600 transition">
+                <i class="fas fa-book text-2xl text-green-600 group-hover:text-white transition"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Kurikulum</h3>
+            <p class="text-gray-500 text-sm">Struktur kurikulum, mata pelajaran, dan program khusus unggulan.</p>
+        </a>
+        <a href="{% url 'public_info:teachers' %}" class="bg-white rounded-xl shadow-md p-8 card-hover group">
+            <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-600 transition">
+                <i class="fas fa-chalkboard-teacher text-2xl text-purple-600 group-hover:text-white transition"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Profil Guru</h3>
+            <p class="text-gray-500 text-sm">Informasi tenaga pendidik, kualifikasi, dan mata pelajaran diampu.</p>
+        </a>
+        <a href="{% url 'public_info:grading' %}" class="bg-white rounded-xl shadow-md p-8 card-hover group">
+            <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-orange-600 transition">
+                <i class="fas fa-chart-line text-2xl text-orange-600 group-hover:text-white transition"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Sistem Penilaian</h3>
+            <p class="text-gray-500 text-sm">Panduan penilaian, skala nilai, dan interpretasi rapor.</p>
+        </a>
+        <a href="{% url 'public_info:calendar' %}" class="bg-white rounded-xl shadow-md p-8 card-hover group">
+            <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-600 transition">
+                <i class="fas fa-calendar-alt text-2xl text-red-600 group-hover:text-white transition"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Kalender Akademik</h3>
+            <p class="text-gray-500 text-sm">Jadwal semester, ujian, libur, dan agenda sekolah.</p>
+        </a>
+        <a href="{% url 'accounts:login' %}" class="bg-white rounded-xl shadow-md p-8 card-hover group">
+            <div class="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-teal-600 transition">
+                <i class="fas fa-user-lock text-2xl text-teal-600 group-hover:text-white transition"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Portal Orang Tua</h3>
+            <p class="text-gray-500 text-sm">Akses pembayaran, pendaftaran ECA, dan informasi akademik siswa.</p>
+        </a>
+    </div>
+</section>
+{% endblock %}

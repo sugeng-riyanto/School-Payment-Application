@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Rekening Bank{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <h1 class="text-2xl font-bold mb-4">{{ action }} Rekening Bank</h1>
+    <form method="post" class="bg-white rounded-xl shadow-md p-6 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Jenjang</label>
+            <select name="level" {% if account %}disabled{% endif %} class="w-full border rounded px-3 py-2 {% if account %}bg-gray-100{% endif %}">
+                <option value="sd" {% if account and account.level == 'sd' %}selected{% endif %}>SD</option>
+                <option value="smp" {% if account and account.level == 'smp' %}selected{% endif %}>SMP</option>
+                <option value="sma" {% if account and account.level == 'sma' %}selected{% endif %}>SMA</option>
+            </select>
+            {% if account %}<input type="hidden" name="level" value="{{ account.level }}">{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipe Pembayaran</label>
+            <select name="payment_type" {% if account %}disabled{% endif %} class="w-full border rounded px-3 py-2 {% if account %}bg-gray-100{% endif %}">
+                <option value="spp" {% if account and account.payment_type == 'spp' %}selected{% endif %}>SPP</option>
+                <option value="dpp_pembangunan" {% if account and account.payment_type == 'dpp_pembangunan' %}selected{% endif %}>DPP Pembangunan</option>
+                <option value="uang_kegiatan" {% if account and account.payment_type == 'uang_kegiatan' %}selected{% endif %}>Uang Kegiatan</option>
+                <option value="cambridge" {% if account and account.payment_type == 'cambridge' %}selected{% endif %}>Cambridge Assessment</option>
+            </select>
+            {% if account %}<input type="hidden" name="payment_type" value="{{ account.payment_type }}">{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Bank</label>
+            <input type="text" name="bank_name" value="{{ account.bank_name|default:'' }}" required class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. Rekening</label>
+            <input type="text" name="account_number" value="{{ account.account_number|default:'' }}" required class="w-full border rounded px-3 py-2 font-mono">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Atas Nama</label>
+            <input type="text" name="account_holder" value="{{ account.account_holder|default:'' }}" required class="w-full border rounded px-3 py-2">
+        </div>
+        <div class="flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Simpan</button>
+            <a href="{% url 'finance:bank_account_list' %}" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">Kembali</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

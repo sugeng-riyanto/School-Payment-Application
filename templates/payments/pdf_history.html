@@ -1,0 +1,64 @@
+{% load finance_extras %}
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>{{ title }}</title>
+<style>
+@page { size: A4 landscape; margin: 10mm 8mm 8mm 8mm; }
+body { font-family: 'DejaVu Sans', 'Helvetica', Arial, sans-serif; font-size: 8px; color: #1e293b; margin: 0; padding: 0; }
+.header { border-bottom: 2px solid #2563eb; padding-bottom: 6px; margin-bottom: 8px; }
+.header-table { width: 100%; border-collapse: collapse; }
+.header-table td { vertical-align: middle; }
+.logo-img { max-width: 35px; max-height: 35px; }
+.school-name { font-size: 16px; font-weight: 800; color: #1a365d; margin: 0; }
+.info { font-size: 8px; margin: 4px 0; }
+.info td { padding: 1px 6px; }
+.info td:first-child { font-weight: 600; width: 110px; color: #475569; }
+table.data { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 7px; }
+table.data th { background: #2563eb; color: white; padding: 4px 3px; text-align: left; font-size: 7px; letter-spacing: 0.3px; white-space: nowrap; }
+table.data td { padding: 2px 3px; border-bottom: 1px solid #e2e8f0; }
+table.data tr:nth-child(even) { background: #f8fafc; }
+.footer { margin-top: 8px; font-size: 7px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+<table class="header-table">
+<tr>
+    <td style="width:40px;">
+        {% if school.logo %}<img src="{{ school.logo.url }}" class="logo-img" alt="Logo">{% endif %}
+    </td>
+    <td>
+        <p class="school-name">{{ school.name|default:'SEKOLAH' }}</p>
+        <p style="font-size:6.5px;color:#64748b;margin:1px 0;">{{ school.address|default:'' }} | {{ school.phone|default:'' }} | {{ school.email|default:'' }}</p>
+    </td>
+</tr>
+</table>
+</div>
+
+<h1 style="font-size:13px;color:#2563eb;text-align:center;margin:4px 0;">{{ title }}</h1>
+
+<table class="info">
+    <tr><td>Jenjang</td><td>: {{ level_name }}</td></tr>
+    <tr><td>Nama Orang Tua</td><td>: {{ user_name|mask }}</td></tr>
+    <tr><td>Email</td><td>: {{ user_email|mask_email }}</td></tr>
+    <tr><td>Tanggal Cetak</td><td>: {{ generated_at }}</td></tr>
+</table>
+
+<table class="data">
+<thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>{% for v in row.values %}<td>{{ v }}</td>{% endfor %}</tr>
+{% empty %}
+<tr><td colspan="{{ headers|length }}" style="text-align:center;color:#94a3b8;padding:8px;">Tidak ada data</td></tr>
+{% endfor %}
+</tbody>
+</table>
+
+<div class="footer">
+    <p>Diunduh oleh: {{ user_name|mask }} pada {{ generated_at }}</p>
+    <p>Informasi ini bersifat informatif. Jika terdapat perbedaan, mohon merujuk pada portal resmi {{ school.name|default:'Sekolah' }}.</p>
+</div>
+</body>
+</html>

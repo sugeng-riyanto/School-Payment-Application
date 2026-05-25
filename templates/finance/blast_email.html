@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% block title %}Blast Email{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold"><i class="fas fa-mail-bulk text-blue-600 mr-2"></i>Blast Email</h1>
+        <div class="flex gap-1">
+            <a href="{% url 'finance:annual_activity_template' 'sd' %}" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200">Template SD</a>
+            <a href="{% url 'finance:annual_activity_template' 'smp' %}" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200">Template SMP</a>
+            <a href="{% url 'finance:annual_activity_template' 'sma' %}" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200">Template SMA</a>
+            <a href="{% url 'finance:spp_va_template' %}" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200">VA SPP</a>
+        </div>
+    </div>
+
+    <div class="mb-4 border-b">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium">
+            <li class="mr-2"><button onclick="showTab('blast')" id="tab-blast-btn" class="inline-block p-3 border-b-2 border-blue-600 text-blue-600 active">Kirim Blast Email</button></li>
+            <li class="mr-2"><button onclick="showTab('import-va')" id="tab-import-va-btn" class="inline-block p-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Import VA SPP</button></li>
+            <li class="mr-2"><button onclick="showTab('import-spp')" id="tab-import-spp-btn" class="inline-block p-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Import Data SPP</button></li>
+            <li class="mr-2"><button onclick="showTab('import-dpp')" id="tab-import-dpp-btn" class="inline-block p-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Import Data DPP</button></li>
+            <li class="mr-2"><button onclick="showTab('import-kegiatan')" id="tab-import-kegiatan-btn" class="inline-block p-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Import Uang Kegiatan</button></li>
+        </ul>
+    </div>
+
+    <div id="tab-blast" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="bg-white p-5 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3"><i class="fas fa-cog text-blue-600 mr-2"></i>Konfigurasi</h2>
+            <form id="blastForm" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Template Tersimpan</label>
+                    <div class="flex gap-2">
+                        <select id="template_selector" class="flex-1 border rounded px-2 py-1.5 text-sm">
+                            <option value="">-- Pilih Template --</option>
+                            {% for t in templates %}
+                            <option value="{{ t.id }}" data-payment="{{ t.payment_type }}" data-subject="{{ t.subject }}" data-body="{{ t.body|escapejs }}" data-bank="{{ t.bank_account }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="loadTemplateBtn" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm">Gunakan</button>
+                        <button type="button" id="saveTemplateBtn" class="bg-cyan-600 text-white px-3 py-1.5 rounded text-sm">Simpan Sebagai Template</button>
+                    </div>
+                    <div id="saveTemplateForm" class="hidden mt-1 flex gap-2">
+                        <input type="text" id="new_template_name" placeholder="Nama template..." class="flex-1 border rounded px-2 py-1 text-xs">
+                        <button type="button" id="confirmSaveTemplate" class="bg-cyan-600 text-white px-2 py-1 rounded text-xs">Simpan</button>
+                        <button type="button" id="cancelSaveTemplate" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">Batal</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Pembayaran</label>
+                    <select name="payment_type" id="payment_type" class="w-full border rounded px-2 py-1.5 text-sm" onchange="updateSubject()">
+                        <option value="spp">SPP</option>
+                        <option value="dpp">DPP Pembangunan</option>
+                        <option value="kegiatan">Uang Kegiatan</option>
+                        <option value="eca">ECA</option>
+                        <option value="cambridge">Cambridge Assessment</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Target</label>
+                        <select name="target" id="target" class="w-full border rounded px-2 py-1.5 text-sm">
+                            <option value="all">Semua</option>
+                            <option value="class">Per Kelas</option>
+                            <option value="individual">Individual</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Kirim Ke</label>
+                        <div class="flex gap-3 mt-1">
+<label class="flex items-center gap-1 text-sm"><input type="checkbox" name="send_to" value="email" class="rounded"> Email</label>
+<label class="flex items-center gap-1 text-sm"><input type="checkbox" name="send_to" value="dashboard" checked class="rounded"> Dashboard</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="class_group" class="hidden">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
+                    <select name="class_grade_id" class="w-full border rounded px-2 py-1.5 text-sm">
+                        {% for cg in class_grades %}<option value="{{ cg.id }}">{{ cg }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div id="student_group" class="hidden">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Siswa</label>
+                    <select name="student_id" class="w-full border rounded px-2 py-1.5 text-sm">
+                        {% for s in students %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Subject Email</label>
+                    <input type="text" name="subject" id="subject" value="Informasi Pembayaran - {{ school.name }}" class="w-full border rounded px-2 py-1.5 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Rekening Tujuan</label>
+                    <select name="bank_account" class="w-full border rounded px-2 py-1.5 text-sm">
+                        <option value="">-- Pilih Rekening --</option>
+                        {% for bank in bank_options %}
+                        <option value="{{ bank.name }} - {{ bank.account }}">{{ bank.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3"><i class="fas fa-file-alt text-green-600 mr-2"></i>Template Pesan</h2>
+            <form id="templateForm">
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Jatuh Tempo</label>
+                        <select name="due_day" class="w-full border rounded px-2 py-1.5 text-sm">
+                            {% for d in day_choices %}<option value="{{ d }}" {% if d == 10 %}selected{% endif %}>{{ d }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Bulan</label>
+                        <select name="due_month" class="w-full border rounded px-2 py-1.5 text-sm">
+                            {% for m in month_choices %}<option value="{{ m.0 }}" {% if m.0 == current_month %}selected{% endif %}>{{ m.1 }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Tahun</label>
+                        <select name="due_year" class="w-full border rounded px-2 py-1.5 text-sm">
+                            {% for y in year_choices %}<option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Body Email <span class="text-gray-400 font-normal">({1}Nama {2}Kelas {3}Bulan {4}Nominal {5}Deadline {6}VA {7}TU {8}WA {9}Drive)</span></label>
+                    <textarea name="body" id="body" rows="10" class="w-full border rounded px-2 py-1.5 text-xs font-mono">Kepada Yth. Orang Tua/Wali Murid {1} (Kelas {2})
+
+Informasi tagihan:
+- Nominal: {4}
+- Batas: {5}
+- VA: {6}
+
+Hubungi {7} di {8}
+
+Terima kasih.
+{{ school.name }}</textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="previewBtn" class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm"><i class="fas fa-eye mr-1"></i>Preview</button>
+                    <button type="button" id="sendAllBtn" class="bg-green-600 text-white px-4 py-1.5 rounded text-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim Semua</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <div id="tab-import-va" class="tab-content hidden">
+        <div class="bg-white p-5 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">Import VA SPP</h2>
+            <form method="post" enctype="multipart/form-data" action="{% url 'finance:import_spp_va' %}">
+                {% csrf_token %}
+                <input type="file" name="file" accept=".xlsx,.xls" required class="block w-full mb-3 text-sm">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm"><i class="fas fa-upload mr-1"></i>Import</button>
+            </form>
+        </div>
+    </div>
+    <div id="tab-import-spp" class="tab-content hidden">
+        <div class="bg-white p-5 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">Import Data SPP</h2>
+            <form method="post" enctype="multipart/form-data" action="{% url 'finance:import_spp' %}">
+                {% csrf_token %}
+                <input type="file" name="file" accept=".xlsx,.xls" required class="block w-full mb-3 text-sm">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm"><i class="fas fa-upload mr-1"></i>Import</button>
+            </form>
+        </div>
+    </div>
+    <div id="tab-import-dpp" class="tab-content hidden">
+        <div class="bg-white p-5 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">Import Data DPP</h2>
+            <form method="post" enctype="multipart/form-data" action="{% url 'finance:import_dpp' %}">
+                {% csrf_token %}
+                <input type="file" name="file" accept=".xlsx,.xls" required class="block w-full mb-3 text-sm">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm"><i class="fas fa-upload mr-1"></i>Import</button>
+            </form>
+        </div>
+    </div>
+    <div id="tab-import-kegiatan" class="tab-content hidden">
+        <div class="bg-white p-5 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">Import Data Uang Kegiatan</h2>
+            <form method="post" enctype="multipart/form-data" action="{% url 'finance:import_kegiatan' %}">
+                {% csrf_token %}
+                <input type="file" name="file" accept=".xlsx,.xls" required class="block w-full mb-3 text-sm">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm"><i class="fas fa-upload mr-1"></i>Import</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Preview</h3>
+            <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <div id="previewContent" class="text-sm whitespace-pre-wrap bg-gray-50 p-4 rounded-lg border"></div>
+        <div class="mt-4 flex justify-end gap-2">
+            <button onclick="closePreview()" class="bg-gray-200 px-4 py-2 rounded text-sm">Tutup</button>
+            <button id="sendFromPreview" class="bg-green-600 text-white px-4 py-2 rounded text-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var currentTemplateId = null;
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('tab-' + name).classList.remove('hidden');
+    document.querySelectorAll('[id^=tab-][id$=-btn]').forEach(el => {
+        el.classList.remove('border-blue-600', 'text-blue-600');
+        el.classList.add('border-transparent', 'text-gray-500');
+    });
+    var btn = document.getElementById('tab-' + name + '-btn');
+    if (btn) { btn.classList.add('border-blue-600', 'text-blue-600'); btn.classList.remove('border-transparent', 'text-gray-500'); }
+}
+
+function updateSubject() {
+    var pt = document.getElementById('payment_type').value;
+    var map = {'spp':'Tagihan SPP','dpp':'DPP Pembangunan','kegiatan':'Uang Kegiatan','eca':'Pembayaran ECA','cambridge':'Cambridge Assessment'};
+    document.getElementById('subject').value = 'Informasi ' + (map[pt]||'Pembayaran') + ' - {{ school.name }}';
+}
+
+document.getElementById('loadTemplateBtn')?.addEventListener('click', function() {
+    var sel = document.getElementById('template_selector');
+    var opt = sel.options[sel.selectedIndex];
+    if (!opt.value) return;
+    currentTemplateId = opt.value;
+    document.getElementById('payment_type').value = opt.dataset.payment;
+    document.getElementById('subject').value = opt.dataset.subject;
+    document.getElementById('body').value = opt.dataset.body;
+    if (opt.dataset.bank) { var bs = document.querySelector('[name=bank_account]'); if (bs) bs.value = opt.dataset.bank; }
+});
+
+document.getElementById('saveTemplateBtn')?.addEventListener('click', function() {
+    document.getElementById('saveTemplateForm').classList.toggle('hidden');
+    if (!document.getElementById('saveTemplateForm').classList.contains('hidden')) {
+        document.getElementById('new_template_name').focus();
+    }
+});
+document.getElementById('confirmSaveTemplate')?.addEventListener('click', function() {
+    var name = document.getElementById('new_template_name').value;
+    if (!name) return;
+    fetch('{% url "finance:blast_email_template_create" %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: new URLSearchParams({
+            'name': name,
+            'payment_type': document.getElementById('payment_type').value,
+            'subject': document.getElementById('subject').value,
+            'body': document.getElementById('body').value,
+        }),
+    }).then(r => r.json()).then(d => {
+        if (d.success) { alert('Template disimpan'); location.reload(); }
+        else alert(d.error || 'Gagal');
+    });
+});
+document.getElementById('cancelSaveTemplate')?.addEventListener('click', function() {
+    document.getElementById('saveTemplateForm').classList.add('hidden');
+});
+
+document.getElementById('target')?.addEventListener('change', function() {
+    document.getElementById('class_group').classList.toggle('hidden', this.value !== 'class');
+    document.getElementById('student_group').classList.toggle('hidden', this.value !== 'individual');
+});
+
+document.getElementById('previewBtn')?.addEventListener('click', function() {
+    document.getElementById('previewContent').textContent = document.getElementById('body').value.replace(/\{(\d)\}/g, (m, n) => ['','Nama','Kelas','Bulan','Rp 500,000','10 Mei 2026','VA123456','Tata Usaha','0812xxxx','drive.google.com'][parseInt(n)] || m);
+    document.getElementById('previewModal').classList.remove('hidden');
+    document.getElementById('previewModal').classList.add('flex');
+});
+function closePreview() {
+    document.getElementById('previewModal').classList.add('hidden');
+    document.getElementById('previewModal').classList.remove('flex');
+}
+document.getElementById('sendFromPreview')?.addEventListener('click', function() { closePreview(); document.getElementById('sendAllBtn')?.click(); });
+
+document.getElementById('sendAllBtn')?.addEventListener('click', function() {
+    if (!confirm('Kirim blast email ke semua target?')) return;
+    var btn = this; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengirim...';
+    var form = document.getElementById('blastForm');
+    var data = new URLSearchParams(new FormData(form));
+    // Handle checkboxes - send_to
+    var sendTos = form.querySelectorAll('[name=send_to]:checked');
+    data.delete('send_to');
+    sendTos.forEach(cb => data.append('send_to', cb.value));
+    fetch('{% url "finance:blast_email_send" %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: data,
+    }).then(r => r.json()).then(d => {
+        alert(d.message || (d.success ? 'Berhasil dikirim' : 'Gagal'));
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Kirim Semua';
+    });
+});
+</script>
+{% endblock %}

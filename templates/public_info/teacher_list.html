@@ -1,0 +1,41 @@
+{% extends 'base_public.html' %}
+{% block title %}Guru - {{ school.name }}{% endblock %}
+{% block content %}
+<div class="hero-gradient text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 class="text-3xl font-bold">Profil Pendidik</h1>
+        <p class="text-blue-200 mt-1">Tenaga pendidik profesional {{ school.name }}</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% if teachers %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for t in teachers %}
+        <div class="bg-white rounded-2xl shadow-md p-6 card-hover">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md">
+                    {{ t.full_name|first }}
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg">{{ t.full_name }}</h3>
+                    {% if t.position %}<p class="text-sm text-gray-500">{{ t.position }}</p>{% endif %}
+                </div>
+            </div>
+            <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex items-center gap-2"><i class="fas fa-graduation-cap w-4 text-blue-600"></i>{{ t.qualification }}</div>
+                <div class="flex items-center gap-2"><i class="fas fa-book-open w-4 text-green-600"></i>{{ t.subjects }}</div>
+                {% if t.email %}<div class="flex items-center gap-2"><i class="fas fa-envelope w-4 text-gray-400"></i>{{ t.email }}</div>{% endif %}
+                {% if t.phone %}<div class="flex items-center gap-2"><i class="fas fa-phone w-4 text-gray-400"></i>{{ t.phone }}</div>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 text-gray-400">
+        <i class="fas fa-chalkboard-teacher text-5xl mb-4"></i>
+        <p>Belum ada data guru.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

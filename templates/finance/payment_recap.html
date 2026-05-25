@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Rekap Pembayaran{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Rekap Pembayaran SPP</h1>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+        <form method="get" class="flex gap-4 items-end flex-wrap">
+            <div>
+                <label class="block text-sm font-medium mb-1">Tahun</label>
+                <select name="year" class="border rounded-lg p-2">
+                    <option value="">Semua Tahun</option>
+                    {% for y in years %}
+                    <option value="{{ y.start_date.year }}" {% if selected_year == y.start_date.year|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Jenjang</label>
+                <select name="grade_level" class="border rounded-lg p-2" onchange="this.form.submit()">
+                    <option value="">Semua Jenjang</option>
+                    {% for k, v in grade_levels %}
+                    <option value="{{ k }}" {% if selected_grade_level == k %}selected{% endif %}>{{ v }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Kelas</label>
+                <select name="class_grade_id" class="border rounded-lg p-2">
+                    <option value="">Semua Kelas</option>
+                    {% for cg in class_grades %}
+                    <option value="{{ cg.id }}" {% if selected_class_grade_id|stringformat:'s' == cg.id|stringformat:'s' %}selected{% endif %}>{{ cg.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Bulan</label>
+                <select name="month" class="border rounded-lg p-2">
+                    <option value="">Semua Bulan</option>
+                    {% for k, v in months %}
+                    <option value="{{ k }}" {% if selected_month|stringformat:'s' == k|stringformat:'s' %}selected{% endif %}>{{ v }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Status</label>
+                <select name="status" class="border rounded-lg p-2">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>Semua</option>
+                    <option value="paid" {% if selected_status == 'paid' %}selected{% endif %}>Lunas</option>
+                    <option value="unpaid" {% if selected_status == 'unpaid' %}selected{% endif %}>Belum</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"><i class="fas fa-filter mr-1"></i>Filter</button>
+            <a href="{% url 'finance:payment_recap' %}" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"><i class="fas fa-undo mr-1"></i>Reset</a>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+            <div class="text-2xl font-bold text-green-600">Rp{{ total_paid|floatformat:0 }}</div>
+            <div class="text-gray-500">Total Lunas</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
+            <div class="text-2xl font-bold text-red-600">Rp{{ total_unpaid|floatformat:0 }}</div>
+            <div class="text-gray-500">Total Belum</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+            <div class="text-2xl font-bold text-blue-600">{{ paid_count }}</div>
+            <div class="text-gray-500">Tagihan Lunas</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-yellow-500">
+            <div class="text-2xl font-bold text-yellow-600">{{ unpaid_count }}</div>
+            <div class="text-gray-500">Tagihan Belum</div>
+        </div>
+    </div>
+
+    <div class="flex space-x-3 mb-6">
+        <a href="{% url 'finance:export_recap_xlsx' %}?{{ request.GET.urlencode }}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+            <i class="fas fa-file-excel mr-1"></i>Download XLSX
+        </a>
+        <a href="{% url 'finance:export_recap_pdf' %}?{{ request.GET.urlencode }}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+            <i class="fas fa-file-pdf mr-1"></i>Download PDF
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left p-3">Siswa</th>
+                        <th class="text-left p-3">Kelas</th>
+                        <th class="text-left p-3">Bulan</th>
+                        <th class="text-left p-3">Tahun</th>
+                        <th class="text-left p-3">Jumlah</th>
+                        <th class="text-left p-3">Status</th>
+                        <th class="text-left p-3">Tgl Bayar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in spp_bills %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3">{{ bill.student.full_name }}{% if not bill.student.is_active %} <span class="text-red-500 text-xs font-semibold">(LULUS)</span>{% endif %}</td>
+                        <td class="p-3">{{ bill.student.class_grade }}</td>
+                        <td class="p-3">{{ bill.get_month_display }}</td>
+                        <td class="p-3">{{ bill.year }}</td>
+                        <td class="p-3">Rp{{ bill.amount|floatformat:0 }}</td>
+                        <td class="p-3">
+                            {% if bill.is_paid %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Lunas</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Belum</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">{{ bill.paid_at|date:"d/m/Y"|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada data</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

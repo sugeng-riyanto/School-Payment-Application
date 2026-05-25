@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Review Laporan oleh PIC{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Review Laporan oleh PIC Teacher</h1>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-4">
+        <h2 class="text-lg font-semibold mb-3">{{ activity.title }}</h2>
+        <table class="w-full text-left text-sm">
+            <tr class="border-b"><td class="py-2 font-semibold w-40">Deskripsi</td><td class="py-2">{{ activity.description|truncatechars:200 }}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Tanggal</td><td class="py-2">{{ activity.start_date|date:"d M Y" }} - {{ activity.end_date|date:"d M Y"|default:"-" }}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Budget Realisasi</td><td class="py-2">Rp {{ activity.budget_real|floatformat:0 }}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Status</td><td class="py-2"><span class="px-2 py-1 rounded text-xs {% if activity.status == 'submitted' %}bg-blue-100 text-blue-800{% elif activity.status == 'revised' %}bg-yellow-100 text-yellow-800{% endif %}">{{ activity.get_status_display }}</span></td></tr>
+            {% if activity.rejection_notes %}<tr class="border-b"><td class="py-2 font-semibold text-red-600">Catatan Revisi</td><td class="py-2 text-red-600">{{ activity.rejection_notes }}</td></tr>{% endif %}
+        </table>
+        <a href="{% url 'activities:detail' activity.id %}" class="text-blue-600 hover:underline text-sm mt-2 inline-block">Lihat Detail Lengkap</a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Keputusan Review</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Catatan (untuk revisi atau penolakan)</label>
+                <textarea name="notes" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Tanda Tangan Approval</label>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-1 bg-white" id="sigContainer">
+                    <canvas id="sigCanvas" class="w-full cursor-crosshair" style="height:200px;touch-action:none;"></canvas>
+                    <input type="hidden" name="signature_data" id="signature_data">
+                </div>
+                <div class="flex gap-2 mt-1">
+                    <button type="button" id="clearSig" class="text-red-600 text-sm hover:text-red-800"><i class="fas fa-eraser mr-1"></i>Hapus</button>
+                    <span class="text-xs text-gray-400 self-center">Tanda tangani di atas kotak</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" name="action" value="pic_approved" id="approveBtn" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50" disabled>Setujui & Teruskan ke Kepsek</button>
+                <button type="submit" name="action" value="revised" class="bg-yellow-500 text-white px-6 py-2 rounded hover:bg-yellow-600">Revisi</button>
+                <button type="submit" name="action" value="rejected" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Tolak</button>
+                <a href="{% url 'activities:list' %}" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Kembali</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(function(){
+    const canvas = document.getElementById('sigCanvas');
+    const ctx = canvas.getContext('2d');
+    const hidden = document.getElementById('signature_data');
+    const approveBtn = document.getElementById('approveBtn');
+    let drawing = false;
+
+    function resizeCanvas() {
+        const rect = document.getElementById('sigContainer').getBoundingClientRect();
+        const w = Math.max(200, rect.width - 4);
+        const oldData = canvas.toDataURL();
+        canvas.width = w;
+        canvas.height = 200;
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        // Restore existing
+        if (oldData && oldData.length > 2000) {
+            const img = new Image();
+            img.onload = function() { ctx.drawImage(img, 0, 0, w, 200); };
+            img.src = oldData;
+        }
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
+    }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', function(e) { e.preventDefault(); startDraw(e); });
+    canvas.addEventListener('touchmove', function(e) { e.preventDefault(); draw(e); });
+    canvas.addEventListener('touchend', function(e) { e.preventDefault(); stopDraw(); });
+
+    function startDraw(e) {
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+    function draw(e) {
+        if (!drawing) return;
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+    function stopDraw() {
+        if (drawing) {
+            drawing = false;
+            hidden.value = canvas.toDataURL('image/png');
+            approveBtn.disabled = false;
+        }
+    }
+
+    document.getElementById('clearSig').addEventListener('click', function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hidden.value = '';
+        approveBtn.disabled = true;
+    });
+})();
+</script>
+{% endblock %}

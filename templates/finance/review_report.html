@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Review Laporan {{ type }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Review Laporan {{ type }}</h1>
+    <div class="bg-white rounded-lg shadow p-6 mb-4">
+        <table class="w-full text-left">
+            <tr class="border-b"><td class="py-2 font-semibold">Jenjang</td><td class="py-2">{{ report.grade }}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Status</td><td class="py-2">{{ report.get_status_display }}</td></tr>
+            {% if type == 'SPP' %}<tr class="border-b"><td class="py-2 font-semibold">Bulan</td><td class="py-2">{{ report.get_month_display }} {{ report.year }}</td></tr>{% endif %}
+            {% if type == 'DPP' %}<tr class="border-b"><td class="py-2 font-semibold">Kategori</td><td class="py-2">{{ report.get_category_display }}</td></tr>{% endif %}
+            {% if type == 'ECA' %}<tr class="border-b"><td class="py-2 font-semibold">Program</td><td class="py-2">{{ report.program.name }}</td></tr>{% endif %}
+            <tr class="border-b"><td class="py-2 font-semibold">Total Tagihan</td><td class="py-2">Rp {% if type == 'ECA' %}{{ report.total_revenue|default:0|floatformat:0 }}{% else %}{{ report.total_amount|default:0|floatformat:0 }}{% endif %}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Total Terkumpul</td><td class="py-2">Rp {{ report.total_collected|default:0|floatformat:0 }}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Jumlah Siswa</td><td class="py-2">{{ report.total_students }}</td></tr>
+            <tr class="border-b"><td class="py-2 font-semibold">Lunas</td><td class="py-2">{{ report.total_paid }}</td></tr>
+            {% if report.rejection_notes %}<tr class="border-b"><td class="py-2 font-semibold text-red-600">Catatan</td><td class="py-2 text-red-600">{{ report.rejection_notes }}</td></tr>{% endif %}
+        </table>
+    </div>
+
+    {% if report.status == 'submitted' or report.status == 'revised' %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Review</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Catatan</label>
+                <textarea name="notes" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" name="action" value="approved" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Setujui</button>
+                <button type="submit" name="action" value="revised" class="bg-yellow-500 text-white px-6 py-2 rounded hover:bg-yellow-600">Revisi</button>
+                <button type="submit" name="action" value="rejected" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Tolak</button>
+                <a href="{% url back_url %}" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Kembali</a>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <a href="{% url back_url %}" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Kembali</a>
+    {% endif %}
+</div>
+{% endblock %}

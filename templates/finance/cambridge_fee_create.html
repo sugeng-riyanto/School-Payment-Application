@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load finance_extras %}
+{% block title %}{% if fee %}Edit{% else %}Tambah{% endif %} Tarif Cambridge{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">{% if fee %}Edit{% else %}Tambah{% endif %} Tarif Cambridge</h1>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Exam</label>
+                <select name="exam_type" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">-- Pilih --</option>
+                    <option value="checkpoints" {% if fee and fee.exam_type == 'checkpoints' %}selected{% endif %}>Checkpoints</option>
+                    <option value="igcse" {% if fee and fee.exam_type == 'igcse' %}selected{% endif %}>IGCSE</option>
+                    <option value="as_level" {% if fee and fee.exam_type == 'as_level' %}selected{% endif %}>AS Level</option>
+                    <option value="a_level" {% if fee and fee.exam_type == 'a_level' %}selected{% endif %}>A Level</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+                <select name="subject" required class="w-full px-4 py-2 border rounded-lg" id="subjectSelect">
+                    <option value="">-- Pilih --</option>
+                    <optgroup label="Checkpoint">
+                        <option value="All" {% if fee and fee.subject == 'All' %}selected{% endif %}>All</option>
+                        <option value="Science" {% if fee and fee.subject == 'Science' %}selected{% endif %}>Science</option>
+                        <option value="Math" {% if fee and fee.subject == 'Math' %}selected{% endif %}>Math</option>
+                        <option value="English" {% if fee and fee.subject == 'English' %}selected{% endif %}>English</option>
+                    </optgroup>
+                    <optgroup label="IGCSE / AS Level / A Level">
+                        <option value="Mathematics" {% if fee and fee.subject == 'Mathematics' %}selected{% endif %}>Mathematics</option>
+                        <option value="English" {% if fee and fee.subject == 'English' %}selected{% endif %}>English</option>
+                        <option value="Physics" {% if fee and fee.subject == 'Physics' %}selected{% endif %}>Physics</option>
+                        <option value="Chemistry" {% if fee and fee.subject == 'Chemistry' %}selected{% endif %}>Chemistry</option>
+                        <option value="Biology" {% if fee and fee.subject == 'Biology' %}selected{% endif %}>Biology</option>
+                        <option value="Economics" {% if fee and fee.subject == 'Economics' %}selected{% endif %}>Economics</option>
+                        <option value="Accounting" {% if fee and fee.subject == 'Accounting' %}selected{% endif %}>Accounting</option>
+                        <option value="Business" {% if fee and fee.subject == 'Business' %}selected{% endif %}>Business</option>
+                        <option value="Computer Science" {% if fee and fee.subject == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                        <option value="Art & Design" {% if fee and fee.subject == 'Art & Design' %}selected{% endif %}>Art & Design</option>
+                    </optgroup>
+                    <optgroup label="Lainnya">
+                        <option value="Lainnya" {% if fee and fee.subject|is_custom_subject %}selected{% endif %}>Lainnya</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div id="customSubjectGroup" style="{% if fee and fee.subject|is_custom_subject %}display:block;{% else %}display:none;{% endif %}">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran (kustom)</label>
+                <input type="text" name="custom_subject" id="customSubjectInput" class="w-full px-4 py-2 border rounded-lg" placeholder="Tulis nama mata pelajaran" value="{% if fee and fee.subject|is_custom_subject %}{{ fee.subject }}{% endif %}">
+                <p class="text-xs text-gray-500 mt-1">Nama akan otomatis terisi saat memilih Lainnya</p>
+            </div>
+            <script>
+            var knownSubjects = ['All','Science','Math','English','Mathematics','Physics','Chemistry','Biology','Economics','Accounting','Business','Computer Science','Art & Design'];
+            document.getElementById('subjectSelect').addEventListener('change', function(){
+                var custom = document.getElementById('customSubjectGroup');
+                var input = document.getElementById('customSubjectInput');
+                if(this.value === 'Lainnya'){
+                    custom.style.display = 'block';
+                    input.setAttribute('required', '');
+                } else {
+                    custom.style.display = 'none';
+                    input.removeAttribute('required');
+                }
+            });
+            </script>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+                <input type="number" name="amount" required class="w-full px-4 py-2 border rounded-lg" value="{{ fee.amount|default:'' }}">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-save mr-2"></i>Simpan
+            </button>
+        </form>
+        <a href="{% url 'finance:cambridge_fee_list' %}" class="mt-4 inline-block text-blue-600 hover:underline text-sm"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+    </div>
+</div>
+
+<script>
+// Re-run on page load for edit mode
+(function(){
+    var sel = document.getElementById('subjectSelect');
+    if(sel.value === 'Lainnya'){
+        document.getElementById('customSubjectGroup').style.display = 'block';
+    }
+})();
+</script>
+{% endblock %}

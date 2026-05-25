@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Jenis Kegiatan{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Jenis Kegiatan</h1>
+    <div class="flex gap-2">
+        <a href="{% url 'activities:create_type' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Tambah</a>
+        <a href="{% url 'activities:download_type_template' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><i class="fas fa-download mr-1"></i>Download Template</a>
+        <a href="{% url 'activities:import_types' %}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"><i class="fas fa-upload mr-1"></i>Import XLSX</a>
+    </div>
+</div>
+<div class="bg-white rounded-lg shadow overflow-x-auto">
+    <table class="w-full text-left">
+        <thead><tr class="bg-gray-100"><th class="p-3">Nama Kegiatan</th><th class="p-3">Bulan</th><th class="p-3">Budget</th><th class="p-3">Mulai</th><th class="p-3">Selesai</th><th class="p-3">PIC</th><th class="p-3">Notes</th><th class="p-3">Aksi</th></tr></thead>
+        <tbody>
+            {% for t in types %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="p-3 font-medium">{{ t.name }}</td>
+                <td class="p-3">{{ t.month }}</td>
+                <td class="p-3">Rp {{ t.budget|floatformat:0 }}</td>
+                <td class="p-3">{{ t.time_start|date:"d M Y" }}</td>
+                <td class="p-3">{{ t.time_finish|date:"d M Y" }}</td>
+                <td class="p-3">{{ t.pic }}</td>
+                <td class="p-3">{{ t.notes|truncatechars:40 }}</td>
+                <td class="p-3 flex gap-2">
+                    <a href="{% url 'activities:edit_type' t.id %}" class="text-yellow-600 hover:text-yellow-800"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'activities:delete_type' t.id %}" class="text-red-600 hover:text-red-800" onclick="return confirm('Hapus jenis kegiatan {{ t.name }}?')"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="p-6 text-center text-gray-500">Belum ada jenis kegiatan.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

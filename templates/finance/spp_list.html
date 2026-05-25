@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Tarif SPP{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Tarif SPP</h1>
+        <div class="flex gap-2">
+            <select onchange="window.location.href='?year='+this.value" class="border rounded-lg px-4 py-2 text-sm">
+                <option value="">Semua Tahun</option>
+                {% for y in years %}
+                <option value="{{ y.id }}" {% if selected_year|stringformat:"s" == y.id|stringformat:"s" %}selected{% endif %}>{{ y.name }}</option>
+                {% endfor %}
+            </select>
+            <a href="{% url 'finance:spp_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                <i class="fas fa-plus mr-1"></i>Tambah Tarif
+            </a>
+            <a href="{% url 'accounts:download_template' 'spp' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                <i class="fas fa-download mr-1"></i>Download Template
+            </a>
+            <a href="{% url 'finance:import_spp' %}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm">
+                <i class="fas fa-upload mr-1"></i>Import XLSX
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left p-4">Tahun Ajaran</th>
+                    <th class="text-left p-4">Jenjang</th>
+                    <th class="text-left p-4">Kelas</th>
+                    <th class="text-left p-4">Nominal (Rp)</th>
+                    <th class="text-left p-4">Status</th>
+                    <th class="text-left p-4">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for spp in spps %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-4">{{ spp.academic_year }}</td>
+                    <td class="p-4">{{ spp.grade.get_level_display }}</td>
+                    <td class="p-4">{{ spp.grade.name }}</td>
+                    <td class="p-4">Rp{{ spp.amount|floatformat:0 }}</td>
+                    <td class="p-4">
+                        {% if spp.is_active %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Aktif</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Nonaktif</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4">
+                        <div class="flex gap-2">
+                            <a href="{% url 'finance:edit_spp' spp.id %}" class="bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600"><i class="fas fa-edit mr-1"></i>Edit</a>
+                            <a href="{% url 'finance:toggle_spp' spp.id %}" class="bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"><i class="fas fa-toggle-on mr-1"></i>Toggle Aktif</a>
+                            <a href="{% url 'finance:delete_spp' spp.id %}" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700" onclick="return confirm('Yakin ingin menghapus tarif SPP ini?')"><i class="fas fa-trash mr-1"></i>Hapus</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada tarif SPP</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

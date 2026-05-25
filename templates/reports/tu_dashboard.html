@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Tata Usaha{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Dashboard Tata Usaha</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <i class="fas fa-money-bill-wave text-3xl text-green-500 mb-2"></i>
+            <div class="text-2xl font-bold">{{ total_spp|default:"0" }}</div>
+            <div class="text-gray-500">Tagihan SPP Aktif</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <i class="fas fa-building text-3xl text-blue-500 mb-2"></i>
+            <div class="text-2xl font-bold">{{ total_dpp|default:"0" }}</div>
+            <div class="text-gray-500">DPP Pembangunan</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <i class="fas fa-exclamation-triangle text-3xl text-red-500 mb-2"></i>
+            <div class="text-2xl font-bold">{{ pending_reminders|default:"0" }}</div>
+            <div class="text-gray-500">Peringatan Aktif</div>
+        </div>
+    </div>
+    {% if total_unread_blast %}
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-center justify-between">
+        <div>
+            <p class="font-semibold text-red-800"><i class="fas fa-envelope mr-1"></i>{{ total_unread_blast }} Pesan Belum Dibaca Parent</p>
+            <p class="text-red-600 text-sm">Orang tua/wali murid belum melihat blast email</p>
+        </div>
+        <a href="{% url 'accounts:internal_info_list' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700">Lihat Detail</a>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Pembayaran SPP Bulan Ini</h2>
+            <canvas id="sppMonthlyChart" height="200"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Akses Cepat</h2>
+            <div class="grid grid-cols-2 gap-3">
+                 <a href="{% url 'finance:blast_email' %}" class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 text-center">
+                     <i class="fas fa-envelope text-blue-600 text-2xl mb-1"></i>
+                     <div class="text-sm">Blast Email</div>
+                 </a>
+                 <a href="{% url 'finance:create_dpp' %}" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 text-center">
+                     <i class="fas fa-plus-circle text-green-600 text-2xl mb-1"></i>
+                     <div class="text-sm">Buat DPP</div>
+                 </a>
+                 <a href="{% url 'finance:reminder_list' %}" class="p-4 bg-red-50 rounded-lg hover:bg-red-100 text-center">
+                     <i class="fas fa-bell text-red-600 text-2xl mb-1"></i>
+                     <div class="text-sm">Laporan Peringatan</div>
+                 </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('sppMonthlyChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Lunas','Belum'],
+        datasets: [{
+            data: [{{ paid_count|default:"0" }}, {{ unpaid_count|default:"0" }}],
+            backgroundColor: ['#22c55e', '#ef4444']
+        }]
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Checkout Pembayaran{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Checkout Pembayaran</h1>
+
+        <div class="space-y-4 mb-6">
+            <div class="flex justify-between p-4 bg-gray-50 rounded-lg">
+                <span class="font-medium">Transaksi</span>
+                <span>{{ transaction.get_transaction_type_display }}</span>
+            </div>
+            <div class="flex justify-between p-4 bg-gray-50 rounded-lg">
+                <span class="font-medium">Order ID</span>
+                <span>{{ transaction.midtrans_order_id }}</span>
+            </div>
+            <div class="flex justify-between p-4 bg-blue-50 rounded-lg text-lg font-bold">
+                <span>Total Pembayaran</span>
+                <span class="text-blue-600">Rp{{ transaction.amount|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        {% if transaction.midtrans_redirect_url %}
+        <div class="text-center space-y-4">
+            <p class="text-gray-600">Anda akan diarahkan ke halaman pembayaran Midtrans.</p>
+            <a href="{{ transaction.midtrans_redirect_url }}" target="_blank"
+               class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium">
+                <i class="fas fa-credit-card mr-2"></i>Bayar Sekarang
+            </a>
+            <p class="text-sm text-gray-500 mt-2">Atau buka tautan berikut: <br>
+                <a href="{{ transaction.midtrans_redirect_url }}" class="text-blue-500">{{ transaction.midtrans_redirect_url }}</a>
+            </p>
+        </div>
+        {% else %}
+        <div class="text-center">
+            <div class="p-4 bg-yellow-50 rounded-lg mb-4">
+                <p class="text-yellow-700"><i class="fas fa-info-circle mr-2"></i>Virtual Account:</p>
+                <p class="text-2xl font-mono font-bold text-yellow-800 mt-2">{{ transaction.virtual_account }}</p>
+            </div>
+            <p class="text-gray-600">Transfer ke nomor VA di atas sesuai jumlah tagihan.</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-6 text-center">
+            <a href="{% url 'payments:history' %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-1"></i>Kembali ke Tagihan
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

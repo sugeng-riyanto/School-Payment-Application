@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load finance_extras %}
+{% block title %}Tagihan SPP{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Tagihan SPP</h1>
+        <div class="flex gap-2">
+            <a href="{% url 'finance:spp_list' %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 text-sm"><i class="fas fa-cog mr-1"></i>Tarif SPP</a>
+            <a href="{% url 'finance:export_spp_bills_xlsx' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+            <a href="{% url 'finance:export_spp_bills_pdf' %}" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+            <a href="{% url 'finance:import_spp_bills' %}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"><i class="fas fa-upload mr-1"></i>Import XLSX</a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+        <div class="p-4 border-b flex flex-wrap gap-4 items-center">
+            <div class="flex gap-1">
+                <a href="?status=all&sort={{ current_sort }}&student={{ request.GET.student }}" class="px-4 py-2 rounded-lg text-sm font-medium {% if current_status == 'all' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">Semua ({{ counts.all }})</a>
+                <a href="?status=paid&sort={{ current_sort }}&student={{ request.GET.student }}" class="px-4 py-2 rounded-lg text-sm font-medium {% if current_status == 'paid' %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">Lunas ({{ counts.paid }})</a>
+                <a href="?status=unpaid&sort={{ current_sort }}&student={{ request.GET.student }}" class="px-4 py-2 rounded-lg text-sm font-medium {% if current_status == 'unpaid' %}bg-red-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">Belum ({{ counts.unpaid }})</a>
+            </div>
+            <div class="flex gap-2 ml-auto">
+                <form method="get" class="flex gap-2 items-center">
+                    <input type="hidden" name="status" value="{{ current_status }}">
+                    <input type="hidden" name="sort" value="{{ current_sort }}">
+                    <input type="text" name="student" placeholder="Cari nama..." value="{{ request.GET.student }}" class="border rounded-lg px-3 py-1.5 text-sm">
+                    <button type="submit" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"><i class="fas fa-search"></i></button>
+                </form>
+                <select onchange="window.location.href='?status={{ current_status }}&sort='+this.value+'&student={{ request.GET.student }}'" class="border rounded-lg px-3 py-1.5 text-sm">
+                    <option value="-year" {% if current_sort == '-year' %}selected{% endif %}>Default</option>
+                    <option value="name" {% if current_sort == 'name' %}selected{% endif %}>A-Z</option>
+                    <option value="-name" {% if current_sort == '-name' %}selected{% endif %}>Z-A</option>
+                </select>
+                <div class="border-l pl-2 ml-2 flex gap-1">
+                    <a href="?status={{ current_status }}&sort={{ current_sort }}&student={{ request.GET.student }}&download=pdf" class="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+                    <a href="?status={{ current_status }}&sort={{ current_sort }}&student={{ request.GET.student }}&download=xlsx" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+                    {% if user.role == 'admin' or user.role == 'tu' %}
+                    <button onclick="confirmBulk()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700"><i class="fas fa-check-double mr-1"></i>Konfirmasi Semua</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left p-3">NISN</th>
+                        <th class="text-left p-3">Nama</th>
+                        <th class="text-left p-3">Kelas</th>
+                        <th class="text-left p-3">Bulan</th>
+                        <th class="text-left p-3">Tahun</th>
+                        <th class="text-left p-3">Nominal</th>
+                        <th class="text-left p-3">Status</th>
+                        <th class="text-left p-3">Invoice Tagihan</th>
+                        <th class="text-left p-3">Invoice Penerimaan</th>
+                        <th class="text-left p-3">Bukti</th>
+                        <th class="text-left p-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in bills %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3 font-mono text-sm">{{ bill.student.nisn }}</td>
+                        <td class="p-3">{{ bill.student.full_name }}{% if not bill.student.is_active %} <span class="text-red-500 text-xs font-semibold">(LULUS)</span>{% endif %}</td>
+                        <td class="p-3">{{ bill.student.class_grade }}</td>
+                        <td class="p-3">{{ bill.get_month_display }}</td>
+                        <td class="p-3">{{ bill.year }}</td>
+                        <td class="p-3">Rp{{ bill.amount|floatformat:0 }}</td>
+                        <td class="p-3">
+                            {% if bill.is_paid %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Lunas</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Belum</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            <a href="{% url 'payments:download_bill_invoice' bill.id %}" class="text-blue-600 hover:text-blue-800 text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+                        </td>
+                        <td class="p-3">
+                            {% with tx_data=bill_tx_map|get_item:bill.id %}
+                            {% if tx_data %}
+                            <a href="{% url 'payments:download_invoice' tx_data.id %}" class="text-green-600 hover:text-green-800 text-sm"><i class="fas fa-file-pdf mr-1"></i>{{ tx_data.invoice_number|default:'PDF' }}</a>
+                            {% else %}
+                            <span class="text-gray-400 text-sm">-</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="p-3">
+                            {% if bill.proofs.exists %}
+                                {% for proof in bill.proofs.all %}
+                                {% if proof.image %}
+                                <img src="{{ proof.image.url }}" class="w-10 h-10 object-cover rounded cursor-pointer border" onclick="showImage('{{ proof.image.url }}')" alt="Bukti">
+                                {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-gray-400 text-sm">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            <div class="flex gap-1">
+                                {% if not bill.is_paid and user.role == 'admin' or not bill.is_paid and user.role == 'tu' %}
+                                <a href="{% url 'finance:confirm_spp_payment' bill.id %}" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"><i class="fas fa-check mr-1"></i>Konfirmasi</a>
+                                {% endif %}
+                                <a href="{% url 'finance:edit_spp_bill' bill.id %}" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"><i class="fas fa-edit mr-1"></i></a>
+                                <a href="{% url 'finance:delete_spp_bill' bill.id %}" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700" onclick="return confirm('Yakin hapus tagihan {{ bill.student.full_name }}?')"><i class="fas fa-trash mr-1"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="11" class="p-6 text-center text-gray-500">Belum ada tagihan SPP</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center">
+    <span class="absolute top-4 right-4 text-white text-3xl cursor-pointer" onclick="closeModal()">&times;</span>
+    <img id="modalImage" class="max-w-[90%] max-h-[90%] object-contain">
+</div>
+<script>
+function showImage(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.remove('hidden');
+    document.getElementById('imageModal').classList.add('flex');
+}
+function closeModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+    document.getElementById('imageModal').classList.remove('flex');
+}
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'imageModal') closeModal();
+});
+
+function confirmBulk() {
+    if (!confirm('Apakah sudah sesuai dengan bukti yang valid? Semua tagihan yang belum lunas akan dikonfirmasi.')) return;
+    const btn = event.target.closest('button');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Memproses...';
+    fetch('{% url "finance:confirm_all_spp" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+    }).then(r => r.json()).then(d => {
+        alert(d.message);
+        if (d.success) location.reload();
+        else { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-double mr-1"></i>Konfirmasi Semua'; }
+    }).catch(() => {
+        alert('Gagal memproses. Coba lagi.');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-double mr-1"></i>Konfirmasi Semua';
+    });
+}
+</script>
+{% endblock %}

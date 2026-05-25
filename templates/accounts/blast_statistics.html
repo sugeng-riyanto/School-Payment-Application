@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Statistik Blast Email{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6"><i class="fas fa-chart-simple text-blue-600 mr-2"></i>Statistik Blast Email</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+            <div class="text-blue-500 text-3xl mb-2"><i class="fas fa-envelope"></i></div>
+            <div class="text-3xl font-bold">{{ total }}</div>
+            <div class="text-gray-500">Total Terkirim</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+            <div class="text-green-500 text-3xl mb-2"><i class="fas fa-check-circle"></i></div>
+            <div class="text-3xl font-bold">{{ read_count }}</div>
+            <div class="text-gray-500">Sudah Dibaca</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
+            <div class="text-red-500 text-3xl mb-2"><i class="fas fa-envelope"></i></div>
+            <div class="text-3xl font-bold">{{ unread_count }}</div>
+            <div class="text-gray-500">Belum Dibaca</div>
+        </div>
+    </div>
+
+    {% if total > 0 %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="font-semibold text-lg mb-4">Per Tipe Pembayaran</h2>
+            <div class="space-y-3">
+                {% for item in by_payment_type %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium">{{ item.payment_type }}</span>
+                    <div class="flex gap-4 text-sm">
+                        <span class="text-green-600">{{ item.read }} dibaca</span>
+                        <span class="text-gray-500">dari {{ item.total }}</span>
+                    </div>
+                </div>
+                {% if item.total > 0 %}
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width:{% widthratio item.read item.total 100 %}%"></div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="font-semibold text-lg mb-4">Ringkasan</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-sm font-medium">Pembaca Unik</span>
+                    <span class="text-lg font-bold">{{ per_student|length }} siswa</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span class="text-sm font-medium">Rata-rata Dibaca</span>
+                    <span class="text-lg font-bold">
+                        {% if total > 0 %}{{ read_count }} / {{ total }}{% else %}0{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="p-4 border-b">
+            <h2 class="font-semibold text-lg">Detail per Siswa</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left p-3">Siswa</th>
+                        <th class="text-left p-3">NISN</th>
+                        <th class="text-left p-3">Kelas</th>
+                        <th class="text-center p-3">Total</th>
+                        <th class="text-center p-3">Dibaca</th>
+                        <th class="text-center p-3">Belum</th>
+                        <th class="text-center p-3">Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in per_student %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3 font-medium">{{ s.student__full_name }}</td>
+                        <td class="p-3 text-sm text-gray-600">{{ s.student__nisn }}</td>
+                        <td class="p-3 text-sm">{{ s.student__class_grade__name }}</td>
+                        <td class="p-3 text-center">{{ s.total_sent }}</td>
+                        <td class="p-3 text-center text-green-600 font-medium">{{ s.read }}</td>
+                        <td class="p-3 text-center text-red-600 font-medium">{{ s.unread }}</td>
+                        <td class="p-3 text-center">
+                            {% if s.total_sent > 0 %}
+                            <div class="w-24 bg-gray-200 rounded-full h-2.5 mx-auto">
+                                <div class="bg-green-500 h-2.5 rounded-full" style="width:{% widthratio s.read s.total_sent 100 %}%"></div>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-400 text-xs">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
+        <i class="fas fa-inbox text-4xl text-gray-300 mb-3 block"></i>
+        Belum ada data blast email.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

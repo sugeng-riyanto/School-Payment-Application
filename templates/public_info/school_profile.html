@@ -1,0 +1,102 @@
+{% extends 'base_public.html' %}
+{% block title %}Profil {{ school.name }}{% endblock %}
+{% block content %}
+<!-- Hero kecil -->
+<div class="hero-gradient text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex items-center gap-4">
+            {% if school.logo %}<img src="{{ school.logo.url }}" class="h-16 w-16 rounded-full border-2 border-white/30">{% endif %}
+            <div>
+                <h1 class="text-3xl font-bold">Profil {{ school.name }}</h1>
+                <p class="text-blue-200">Informasi lengkap identitas sekolah</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Info dasar -->
+    <div class="bg-white rounded-2xl shadow-md p-8 mb-6">
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <h2 class="text-2xl font-bold mb-4">{{ school.name }}</h2>
+                <div class="space-y-3 text-gray-600">
+                    {% if school.address %}<p><i class="fas fa-map-marker-alt w-6 text-blue-600"></i> {{ school.address }}</p>{% endif %}
+                    {% if school.phone %}<p><i class="fas fa-phone w-6 text-blue-600"></i> {{ school.phone }}</p>{% endif %}
+                    {% if school.email %}<p><i class="fas fa-envelope w-6 text-blue-600"></i> {{ school.email }}</p>{% endif %}
+                    {% if school.website %}<p><i class="fas fa-globe w-6 text-blue-600"></i> {{ school.website }}</p>{% endif %}
+                </div>
+                {% if school.accreditation %}
+                <div class="mt-4 inline-block bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium">{{ school.accreditation }}</div>
+                {% endif %}
+            </div>
+            {% if school.logo %}
+            <div class="flex justify-center items-center">
+                <img src="{{ school.logo.url }}" class="h-36 w-36 rounded-2xl shadow-lg object-cover">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Visi Misi -->
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl shadow-md p-8">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-eye text-blue-600"></i>Visi</h2>
+            <p class="text-gray-700 leading-relaxed">{{ school.vision }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-md p-8">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-bullseye text-green-600"></i>Misi</h2>
+            <p class="text-gray-700 leading-relaxed">{{ school.mission }}</p>
+        </div>
+    </div>
+
+    <!-- Nilai Inti -->
+    {% if school.core_values %}
+    <div class="bg-white rounded-2xl shadow-md p-8 mb-6">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-star text-yellow-500"></i>Nilai-nilai Inti</h2>
+        <div class="prose max-w-none text-gray-700">{{ school.core_values|linebreaks }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Sejarah -->
+    {% if school.history %}
+    <div class="bg-white rounded-2xl shadow-md p-8 mb-6">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-history text-purple-600"></i>Sejarah Singkat</h2>
+        <div class="prose max-w-none text-gray-700">{{ school.history|linebreaks }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Kontak & Sosmed -->
+    <div class="bg-white rounded-2xl shadow-md p-8 mb-6">
+        <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><i class="fas fa-address-card text-gray-600"></i>Kontak & Media Sosial</h2>
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <h3 class="font-semibold mb-3 text-gray-800">Saluran Komunikasi</h3>
+                <div class="space-y-3">
+                    {% for c in contacts %}
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                            <i class="fas fa-{% if c.contact_type == 'phone' %}phone{% elif c.contact_type == 'email' %}envelope{% else %}comment{% endif %}"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium">{{ c.label }}</div>
+                            <div class="text-sm text-gray-500">{{ c.value }}</div>
+                        </div>
+                    </div>
+                    {% empty %}<p class="text-gray-400">Belum ada kontak</p>{% endfor %}
+                </div>
+            </div>
+            <div>
+                <h3 class="font-semibold mb-3 text-gray-800">Media Sosial</h3>
+                <div class="flex flex-wrap gap-3">
+                    {% for s in social %}
+                    <a href="{{ s.url }}" target="_blank" class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-blue-600 hover:text-white transition text-xl">
+                        {% if s.icon %}<i class="{{ s.icon }}"></i>{% else %}<i class="fas fa-share-alt"></i>{% endif %}
+                    </a>
+                    {% empty %}<p class="text-gray-400">Belum ada media sosial</p>{% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

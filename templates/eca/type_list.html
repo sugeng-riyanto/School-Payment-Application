@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Jenis ECA{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Jenis ECA</h1>
+        <div class="space-x-2">
+            <a href="{% url 'accounts:download_template' 'eca_types' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                <i class="fas fa-download mr-1"></i>Download Template XLSX
+            </a>
+            <a href="{% url 'eca:import_types' %}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                <i class="fas fa-upload mr-1"></i>Import XLSX
+            </a>
+            <a href="{% url 'eca:create_type' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-1"></i>Jenis Baru
+            </a>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for t in types %}
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-lg">{{ t.name }}</h3>
+                {% if t.is_active %}
+                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Aktif</span>
+                {% else %}
+                <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">Nonaktif</span>
+                {% endif %}
+            </div>
+            <p class="text-gray-500 text-sm mb-3">{{ t.description|truncatewords:20 }}</p>
+            <div class="flex gap-2">
+                <a href="{% url 'eca:edit_type' t.id %}" class="bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600"><i class="fas fa-edit mr-1"></i>Edit</a>
+                <a href="{% url 'eca:delete_type' t.id %}" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700" onclick="return confirm('Yakin ingin menghapus {{ t.name }}?')"><i class="fas fa-trash mr-1"></i>Hapus</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-gray-500">
+            <i class="fas fa-tag text-4xl mb-4"></i>
+            <p>Belum ada jenis ECA</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

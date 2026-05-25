@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}Data Guru{% endblock %}
+{% block content %}
+{% with current_sort=request.GET.sort current_dir=request.GET.dir|default:'asc' %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Data Guru</h1>
+        <a href="{% url 'public_info:admin_teacher_structure' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm">
+            <i class="fas fa-sitemap mr-1"></i>Struktur Organisasi
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-4 mb-6 flex flex-wrap items-center gap-4">
+        <form method="post" action="{% url 'public_info:import_teachers' %}" enctype="multipart/form-data" class="flex items-center gap-2">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".xlsx" class="text-sm border rounded px-2 py-1" required>
+            <button type="submit" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700">
+                <i class="fas fa-upload mr-1"></i>Import XLSX
+            </button>
+        </form>
+        <a href="{% url 'public_info:download_teacher_template' %}" class="text-blue-600 hover:text-blue-800 text-sm">
+            <i class="fas fa-download mr-1"></i>Download Template
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h2 class="font-semibold mb-4">Tambah Guru</h2>
+        <form method="post" enctype="multipart/form-data" class="grid md:grid-cols-3 gap-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            <input type="text" name="full_name" placeholder="Nama Lengkap" required class="border rounded px-3 py-2">
+            <input type="text" name="nip" placeholder="NIP" class="border rounded px-3 py-2">
+            <select name="level" class="border rounded px-3 py-2">
+                <option value="">-- Jenjang --</option>
+                <option value="sd">SD</option>
+                <option value="smp">SMP</option>
+                <option value="sma">SMA</option>
+            </select>
+            <input type="text" name="qualification" placeholder="Kualifikasi Pendidikan" required class="border rounded px-3 py-2">
+            <input type="text" name="subjects" placeholder="Mata Pelajaran Diampu" required class="border rounded px-3 py-2">
+            <input type="text" name="position" placeholder="Jabatan" class="border rounded px-3 py-2">
+            <input type="email" name="email" placeholder="Email Profesional" class="border rounded px-3 py-2">
+            <input type="text" name="phone" placeholder="Kontak" class="border rounded px-3 py-2">
+            <div class="flex items-center gap-2">
+                <input type="file" name="photo" accept="image/*" class="text-sm">
+            </div>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                <i class="fas fa-plus mr-1"></i>Tambah
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Foto</th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">
+                        <a href="?sort=name&amp;dir={% if current_sort == 'name' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" class="hover:text-blue-600">
+                            Nama{% if current_sort == 'name' %}<span class="ml-1">{% if current_dir == 'asc' %}↑{% else %}↓{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">
+                        <a href="?sort=nip&amp;dir={% if current_sort == 'nip' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" class="hover:text-blue-600">
+                            NIP{% if current_sort == 'nip' %}<span class="ml-1">{% if current_dir == 'asc' %}↑{% else %}↓{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">
+                        <a href="?sort=level&amp;dir={% if current_sort == 'level' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" class="hover:text-blue-600">
+                            Jenjang{% if current_sort == 'level' %}<span class="ml-1">{% if current_dir == 'asc' %}↑{% else %}↓{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Kualifikasi</th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Mapel</th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">
+                        <a href="?sort=position&amp;dir={% if current_sort == 'position' and current_dir == 'asc' %}desc{% else %}asc{% endif %}" class="hover:text-blue-600">
+                            Jabatan{% if current_sort == 'position' %}<span class="ml-1">{% if current_dir == 'asc' %}↑{% else %}↓{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in teachers %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3">
+                        {% if t.photo %}
+                        <img src="{{ t.photo.url }}" alt="{{ t.full_name }}" class="w-10 h-10 rounded-full object-cover">
+                        {% else %}
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="p-3 font-medium">{{ t.full_name }}</td>
+                    <td class="p-3 text-sm">{{ t.nip|default:'-' }}</td>
+                    <td class="p-3 text-sm">{{ t.get_level_display|default:'-' }}</td>
+                    <td class="p-3 text-sm">{{ t.qualification }}</td>
+                    <td class="p-3 text-sm">{{ t.subjects }}</td>
+                    <td class="p-3 text-sm">{{ t.position|default:'-' }}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-xs rounded-full {% if t.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ t.is_active|yesno:"Aktif,Nonaktif" }}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex gap-2 items-center">
+                            <a href="{% url 'public_info:admin_teachers_edit' t.id %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </a>
+                            <form method="post" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="pk" value="{{ t.id }}">
+                                <button type="submit" class="text-yellow-600 hover:text-yellow-800 text-sm">
+                                    <i class="fas {% if t.is_active %}fa-pause{% else %}fa-play{% endif %} mr-1"></i>{{ t.is_active|yesno:"Nonaktifkan,Aktifkan" }}
+                                </button>
+                            </form>
+                            <form method="post" onsubmit="return confirm('Hapus guru {{ t.full_name|escapejs }}?')" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="pk" value="{{ t.id }}">
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                    <i class="fas fa-trash mr-1"></i>Hapus
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="p-4 text-center text-gray-500">Belum ada data guru</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if edit_teacher %}
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Edit Guru</h2>
+            <a href="{% url 'public_info:admin_teachers' %}" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="grid gap-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="pk" value="{{ edit_teacher.id }}">
+            <input type="text" name="full_name" value="{{ edit_teacher.full_name }}" placeholder="Nama Lengkap" required class="border rounded px-3 py-2">
+            <input type="text" name="nip" value="{{ edit_teacher.nip }}" placeholder="NIP" class="border rounded px-3 py-2">
+            <select name="level" class="border rounded px-3 py-2">
+                <option value="">-- Jenjang --</option>
+                <option value="sd" {% if edit_teacher.level == 'sd' %}selected{% endif %}>SD</option>
+                <option value="smp" {% if edit_teacher.level == 'smp' %}selected{% endif %}>SMP</option>
+                <option value="sma" {% if edit_teacher.level == 'sma' %}selected{% endif %}>SMA</option>
+            </select>
+            <input type="text" name="qualification" value="{{ edit_teacher.qualification }}" placeholder="Kualifikasi Pendidikan" required class="border rounded px-3 py-2">
+            <input type="text" name="subjects" value="{{ edit_teacher.subjects }}" placeholder="Mata Pelajaran Diampu" required class="border rounded px-3 py-2">
+            <input type="text" name="position" value="{{ edit_teacher.position }}" placeholder="Jabatan" class="border rounded px-3 py-2">
+            <input type="email" name="email" value="{{ edit_teacher.email }}" placeholder="Email Profesional" class="border rounded px-3 py-2">
+            <input type="text" name="phone" value="{{ edit_teacher.phone }}" placeholder="Kontak" class="border rounded px-3 py-2">
+            <div>
+                <label class="text-sm text-gray-600 block mb-1">Foto</label>
+                {% if edit_teacher.photo %}
+                <div class="flex items-center gap-2 mb-2">
+                    <img src="{{ edit_teacher.photo.url }}" alt="{{ edit_teacher.full_name }}" class="w-12 h-12 rounded-full object-cover">
+                    <span class="text-sm text-gray-500">Ganti:</span>
+                </div>
+                {% endif %}
+                <input type="file" name="photo" accept="image/*" class="text-sm">
+            </div>
+            <div class="flex gap-2 mt-2">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex-1">
+                    <i class="fas fa-save mr-1"></i>Simpan
+                </button>
+                <a href="{% url 'public_info:admin_teachers' %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 text-center flex-1">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}

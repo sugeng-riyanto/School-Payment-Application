@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Bukti Pembayaran{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Bukti Pembayaran Siswa</h1>
+        <div class="flex gap-2">
+            <a href="{% url 'reports:export_proof_xlsx' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+            <a href="{% url 'reports:export_proof_pdf' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left p-3">Siswa</th>
+                        <th class="text-left p-3">NISN</th>
+                        <th class="text-left p-3">Tipe Pembayaran</th>
+                        <th class="text-left p-3">Jumlah</th>
+                        <th class="text-left p-3">Tgl Upload</th>
+                        <th class="text-left p-3">Status</th>
+                        <th class="text-left p-3">File</th>
+                        <th class="text-left p-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proof in proofs %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3 font-medium">{{ proof.student.full_name }}</td>
+                        <td class="p-3 text-sm text-gray-600">{{ proof.student.nisn }}</td>
+                        <td class="p-3">
+                            {% if proof.transaction %}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{{ proof.transaction.get_transaction_type_display }}</span>
+                            {% elif proof.spp_bill %}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">SPP</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            {% if proof.spp_bill %}
+                            Rp{{ proof.spp_bill.amount|floatformat:0 }}
+                            {% elif proof.transaction %}
+                            Rp{{ proof.transaction.amount|floatformat:0 }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="p-3 text-sm">{{ proof.uploaded_at|date:"d/m/Y H:i" }}</td>
+                        <td class="p-3">
+                            {% if proof.is_verified %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Disetujui</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Diproses</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            <a href="{{ proof.image.url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+                                <i class="fas fa-eye mr-1"></i>Lihat
+                            </a>
+                            {% if proof.image.url|slice:'-4:' == '.pdf' or proof.image.url|slice:'-4:' == '.PDF' %}
+                            <span class="text-xs text-gray-400 ml-1">PDF</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3">
+                            {% if not proof.is_verified and user.role == 'tu' or not proof.is_verified and user.role == 'admin' %}
+                            <a href="{% url 'payments:verify_proof' proof.id %}" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700">
+                                <i class="fas fa-check mr-1"></i>Setujui
+                            </a>
+                            {% endif %}
+                            {% if proof.is_verified %}
+                            <span class="text-green-600 text-sm"><i class="fas fa-check-circle mr-1"></i>Selesai</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="p-4 text-center text-gray-500">Belum ada bukti pembayaran</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

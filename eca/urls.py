@@ -1,0 +1,40 @@
+from django.urls import path
+from . import views
+
+app_name = 'eca'
+
+urlpatterns = [
+    path('types/', views.eca_type_list, name='type_list'),
+    path('types/create/', views.create_eca_type, name='create_type'),
+    path('types/<int:pk>/edit/', views.edit_eca_type, name='edit_type'),
+    path('types/<int:pk>/delete/', views.delete_eca_type, name='delete_type'),
+    path('programs/', views.program_list, name='program_list'),
+    path('programs/create/', views.create_program, name='create_program'),
+    path('programs/<int:pk>/edit/', views.edit_program, name='edit_program'),
+    path('registrations/', views.registration_list, name='registration_list'),
+    path('registrations/register/', views.register_eca, name='register'),
+    path('registrations/<int:reg_id>/approve/', views.approve_registration, name='approve'),
+    path('registrations/approve-all/', views.approve_all_registrations, name='approve_all'),
+    path('setting/', views.eca_setting, name='eca_setting'),
+    path('download/', views.download_eca_report, name='download_report'),
+    path('export/participants/xlsx/', views.export_participants_xlsx, name='export_participants_xlsx'),
+    path('export/participants/pdf/', views.export_participants_pdf, name='export_participants_pdf'),
+    path('import/types/', views.import_types, name='import_types'),
+    path('import/programs/', views.import_programs, name='import_programs'),
+    path('scores/', views.score_list, name='score_list'),
+    path('scores/<int:program_id>/', views.score_program, name='score_program'),
+    path('scores/<int:program_id>/import/', views.import_scores, name='import_scores'),
+    path('scores/<int:program_id>/download-template/', views.download_score_template, name='download_score_template'),
+    path('scores/import/all/', views.import_all_scores, name='import_all_scores'),
+    path('scores/download-all-template/', views.download_all_scores_template, name='download_all_scores_template'),
+    path('scores/generate-dummy/', views.generate_dummy_scores, name='generate_dummy_scores'),
+    path('reports/', views.eca_report_list, name='eca_report_list'),
+    path('reports/<int:pk>/review/', views.review_eca_report, name='review_eca_report'),
+    path('reports/create/', views.create_eca_report, name='create_eca_report'),
+    path('programs/<int:pk>/approve/', views.approve_program, name='approve_program'),
+    path('registrations/manage/', views.registration_management, name='registration_management'),
+    path('reports/export/xlsx/', views.export_eca_report_xlsx, name='export_eca_report_xlsx'),
+    path('payments/', views.eca_payment_list, name='eca_payment_list'),
+    path('payments/<int:pay_id>/review/', views.eca_payment_review, name='eca_payment_review'),
+    path('invoice/<int:inv_id>/download/', views.download_eca_invoice, name='download_invoice'),
+]

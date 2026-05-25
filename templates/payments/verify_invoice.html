@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Verifikasi Invoice{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Verifikasi Invoice</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Manual input -->
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-3"><i class="fas fa-keyboard text-blue-600 mr-2"></i>Input Manual</h2>
+            <p class="text-sm text-gray-600 mb-4">Masukkan kode verifikasi yang tertera pada invoice.</p>
+            <form method="post" class="space-y-3">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kode Verifikasi</label>
+                    <input type="text" name="code" id="manualCode" value="{{ code }}" required maxlength="20"
+                           class="w-full px-4 py-3 border rounded-lg text-lg font-mono tracking-widest uppercase"
+                           placeholder="A1B2C3D4E5F6" style="letter-spacing: 3px;">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">
+                    <i class="fas fa-search mr-2"></i>Verifikasi
+                </button>
+            </form>
+        </div>
+
+        <!-- QR Scanner -->
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-3"><i class="fas fa-camera text-green-600 mr-2"></i>Scan QR Code</h2>
+            <p class="text-sm text-gray-600 mb-4">Arahkan kamera ke QR Code pada invoice.</p>
+            <div id="qr-reader" style="width:100%;"></div>
+            <div id="qr-result" class="mt-3 hidden">
+                <p class="text-sm text-green-700 font-medium"><i class="fas fa-check-circle mr-1"></i>Kode terbaca:</p>
+                <p id="qr-code-text" class="text-lg font-mono font-bold text-blue-700 tracking-wider mt-1"></p>
+                <button id="qr-verify-btn" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                    <i class="fas fa-search mr-1"></i>Verifikasi Kode Ini
+                </button>
+            </div>
+            <button id="qr-stop-btn" class="mt-2 text-sm text-red-600 hover:text-red-800 hidden">
+                <i class="fas fa-stop mr-1"></i>Hentikan Kamera
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Result -->
+    {% if result %}
+    <div class="mt-6 bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-green-700">Invoice VALID</h2>
+                <p class="text-sm text-green-600">Kode verifikasi cocok dengan data sistem.</p>
+            </div>
+        </div>
+        <table class="w-full text-sm">
+            <tr><td class="py-2 font-medium text-gray-600 w-40">No. Invoice</td><td>{{ result.invoice_number|default:"-" }}</td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">Kode Verifikasi</td><td class="font-mono font-bold text-blue-700 tracking-wider">{{ result.verification_code }}</td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">Siswa</td><td>{{ result.student.full_name }}</td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">NISN</td><td>{{ result.student.nisn }}</td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">Tipe</td><td>{{ result.get_transaction_type_display }}</td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">Jumlah</td><td>Rp{{ result.amount|floatformat:0 }}</td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">Status</td><td><span class="px-2 py-0.5 rounded-full text-xs {% if result.status == 'success' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">{{ result.get_status_display }}</span></td></tr>
+            <tr><td class="py-2 font-medium text-gray-600">Tanggal Bayar</td><td>{{ result.paid_at|date:"d/m/Y H:i"|default:"-" }}</td></tr>
+            {% if result.student.class_grade %}
+            <tr><td class="py-2 font-medium text-gray-600">Kelas</td><td>{{ result.student.class_grade }}</td></tr>
+            {% endif %}
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let html5QrCode = null;
+
+function startScanner() {
+    const reader = document.getElementById('qr-reader');
+    const resultDiv = document.getElementById('qr-result');
+    const stopBtn = document.getElementById('qr-stop-btn');
+
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onScanSuccess
+    ).catch(function(err) {
+        reader.innerHTML = `<p class="text-sm text-red-600 p-4 text-center"><i class="fas fa-exclamation-triangle mr-1"></i>Kamera tidak tersedia atau izin ditolak.<br><span class="text-gray-500">Gunakan input manual di samping.</span></p>`;
+    });
+    stopBtn.classList.remove('hidden');
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('qr-stop-btn').classList.add('hidden');
+        });
+    }
+    // Extract code from QR data (format: "INV:xxx|CODE:xxxx" or "VA:xxx|CODE:xxxx")
+    let code = decodedText;
+    const match = decodedText.match(/CODE:([A-F0-9]+)/i);
+    if (match) {
+        code = match[1];
+    }
+    document.getElementById('qr-code-text').textContent = code;
+    document.getElementById('qr-result').classList.remove('hidden');
+    document.getElementById('manualCode').value = code;
+}
+
+document.getElementById('qr-verify-btn').addEventListener('click', function() {
+    const code = document.getElementById('qr-code-text').textContent;
+    document.getElementById('manualCode').value = code;
+    document.querySelector('form').submit();
+});
+
+document.getElementById('qr-stop-btn').addEventListener('click', function() {
+    if (html5QrCode) {
+        html5QrCode.stop();
+        this.classList.add('hidden');
+    }
+});
+
+// Auto-start scanner on page load
+window.addEventListener('load', startScanner);
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Laporan Bulanan SPP{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Laporan Bulanan SPP</h1>
+</div>
+<div class="bg-white rounded-lg shadow overflow-x-auto">
+    <table class="w-full text-left">
+        <thead><tr class="bg-gray-100"><th class="p-3">Jenjang</th><th class="p-3">Bulan</th><th class="p-3">Tahun</th><th class="p-3">Total Tagihan</th><th class="p-3">Terkumpul</th><th class="p-3">Status</th><th class="p-3">Saran</th><th class="p-3">Aksi</th></tr></thead>
+        <tbody>
+            {% for r in reports %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="p-3">{{ r.grade }}</td>
+                <td class="p-3">{{ r.get_month_display }}</td>
+                <td class="p-3">{{ r.year }}</td>
+                <td class="p-3">Rp {{ r.total_amount|default:0|floatformat:0 }}</td>
+                <td class="p-3">Rp {{ r.total_collected|default:0|floatformat:0 }}</td>
+                <td class="p-3">
+                    {% if r.status == 'draft' %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Draft</span>
+                    {% elif r.status == 'submitted' %}
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Diajukan</span>
+                    {% elif r.status == 'approved' %}
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Disetujui</span>
+                    {% elif r.status == 'revised' %}
+                    <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">Revisi</span>
+                    {% elif r.status == 'rejected' %}
+                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Ditolak</span>
+                    {% else %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">{{ r.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td class="p-3 text-sm">
+                    {% if r.status == 'submitted' %}
+                    <span class="text-yellow-600">Perlu review TU</span>
+                    {% elif r.status == 'approved' %}
+                    <span class="text-green-600">Lengkap</span>
+                    {% elif r.status == 'rejected' %}
+                    <span class="text-red-600">Perlu diperbaiki</span>
+                    {% elif r.status == 'revised' %}
+                    <span class="text-orange-600">Perlu diperbaiki</span>
+                    {% else %}
+                    <span class="text-gray-500">-</span>
+                    {% endif %}
+                </td>
+                <td class="p-3">
+                    {% if user.role == 'admin' or user.role == 'kepsek' or user.role == 'vp_activity' %}
+                        {% if r.status == 'submitted' %}
+                        <a href="{% url 'finance:review_spp_report' r.id %}" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">Review</a>
+                        {% else %}
+                        <a href="{% url 'finance:review_spp_report' r.id %}" class="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700">Lihat</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="p-6 text-center text-gray-500">Belum ada laporan SPP.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

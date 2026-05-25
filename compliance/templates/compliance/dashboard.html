@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Compliance & Keamanan{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Dashboard Compliance & Keamanan</h1>
+        <div class="flex space-x-2">
+            <a href="{% url 'compliance:seed' %}" class="bg-gray-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-700"><i class="fas fa-database mr-1"></i>Seed Controls</a>
+        </div>
+    </div>
+
+    <!-- Framework Compliance Score -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {% for fw, data in frameworks_data.items %}
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ data.label }}</h3>
+            <div class="flex items-end justify-between">
+                <div class="text-3xl font-bold">{{ data.pct }}%</div>
+                <div class="text-sm text-gray-500">{{ data.compliant }}/{{ data.total }}</div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                <div class="h-2.5 rounded-full {% if data.pct >= 80 %}bg-green-500{% elif data.pct >= 50 %}bg-yellow-500{% else %}bg-red-500{% endif %}" style="width: {{ data.pct }}%"></div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white p-4 rounded-xl shadow-md col-span-3 text-center text-gray-500">
+            Belum ada data compliance. <a href="{% url 'compliance:seed' %}" class="text-blue-600 underline">Seed data sekarang</a>.
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Audit Log & Security Events Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500">
+            <div class="text-2xl font-bold text-blue-600">{{ total_audit_logs }}</div>
+            <div class="text-gray-500 text-sm">Total Audit Log</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500">
+            <div class="text-2xl font-bold text-green-600">{{ audit_logs_30d }}</div>
+            <div class="text-gray-500 text-sm">Aktivitas 30 Hari</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-red-500">
+            <div class="text-2xl font-bold text-red-600">{{ high_critical_events }}</div>
+            <div class="text-gray-500 text-sm">Event Kritis Belum Selesai</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-purple-500">
+            <div class="text-2xl font-bold text-purple-600">{{ consent_count }}/{{ total_users }}</div>
+            <div class="text-gray-500 text-sm">Persetujuan Privasi</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Volume Audit Log (30 Hari)</h2>
+            <canvas id="auditTimeline" height="200"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Aksi Berdasarkan Tipe</h2>
+            <canvas id="actionPie" height="200"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Security Events by Severity</h2>
+            <canvas id="severityBar" height="200"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Compliance per Framework</h2>
+            <canvas id="frameworkRadar" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Security Events -->
+    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">Security Events Belum Selesai</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead><tr class="border-b"><th class="text-left p-2">Severity</th><th class="text-left p-2">Event</th><th class="text-left p-2">Tgl</th><th class="text-left p-2">User</th></tr></thead>
+                <tbody>
+                    {% for event in recent_events %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2">
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                                {% if event.severity == 'critical' %}bg-red-100 text-red-800
+                                {% elif event.severity == 'high' %}bg-orange-100 text-orange-800
+                                {% elif event.severity == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ event.get_severity_display }}
+                            </span>
+                        </td>
+                        <td class="p-2">{{ event.title }}</td>
+                        <td class="p-2 text-sm text-gray-500">{{ event.created_at|date:"d M Y H:i" }}</td>
+                        <td class="p-2">{{ event.user.username|default:'-' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="p-2 text-center text-gray-500">Tidak ada security events</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Data Retention Policies -->
+    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+        <h2 class="text-lg font-semibold mb-4">Kebijakan Retensi Data</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead><tr class="border-b"><th class="text-left p-2">Kategori</th><th class="text-left p-2">Retensi (Hari)</th><th class="text-left p-2">Status</th></tr></thead>
+                <tbody>
+                    {% for p in retention_policies %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2">{{ p.get_category_display }}</td>
+                        <td class="p-2">{{ p.retention_days }}</td>
+                        <td class="p-2">{% if p.is_active %}<span class="text-green-600">Active</span>{% else %}<span class="text-red-600">Inactive</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="p-2 text-center text-gray-500">Belum ada kebijakan retensi</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Audit Logs Table -->
+    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">Audit Trail Terbaru</h2>
+            <div class="flex space-x-2">
+                <a href="{% url 'compliance:audit_log_list' %}" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700"><i class="fas fa-list mr-1"></i>Lihat Semua</a>
+                <a href="{% url 'compliance:export_audit_xlsx' %}" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+                <a href="{% url 'compliance:export_audit_pdf' %}" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead><tr class="border-b"><th class="text-left p-2">Timestamp</th><th class="text-left p-2">User</th><th class="text-left p-2">Action</th><th class="text-left p-2">Object</th><th class="text-left p-2">IP</th></tr></thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr class="border-b hover:bg-gray-50 text-sm">
+                        <td class="p-2 text-gray-500">{{ log.created_at|date:"d M Y H:i:s" }}</td>
+                        <td class="p-2">{{ log.username }}</td>
+                        <td class="p-2"><span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">{{ log.get_action_display }}</span></td>
+                        <td class="p-2">{{ log.model_name }}{% if log.object_repr %}: {{ log.object_repr }}{% endif %}</td>
+                        <td class="p-2 text-gray-500">{{ log.ip_address|default:'-' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="p-2 text-center text-gray-500">Belum ada data audit</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Audit Timeline
+new Chart(document.getElementById('auditTimeline'), {
+    type: 'line', data: {
+        labels: {{ daily_labels|safe }},
+        datasets: [{label:'Audit Events', data:{{ daily_audit|safe }}, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', fill:true, tension:0.3}]
+    }, options: { responsive: true, plugins: { legend: { display: false } } }
+});
+
+// Action Pie
+new Chart(document.getElementById('actionPie'), {
+    type: 'doughnut', data: {
+        labels: [{% for a in audit_by_action %}'{{ a.action|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{data: [{% for a in audit_by_action %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}], backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6']}]
+    }
+});
+
+// Severity Bar
+new Chart(document.getElementById('severityBar'), {
+    type: 'bar', data: {
+        labels: [{% for e in events_by_severity %}'{{ e.severity|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{label:'Events', data:[{% for e in events_by_severity %}{{ e.count }}{% if not forloop.last %},{% endif %}{% endfor %}], backgroundColor:['#22c55e','#f59e0b','#f97316','#ef4444']}]
+    }
+});
+
+// Framework Radar
+new Chart(document.getElementById('frameworkRadar'), {
+    type: 'radar', data: {
+        labels: [{% for fw, data in frameworks_data.items %}'{{ data.label|slice:':15' }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label:'Compliance %', data:[{% for fw, data in frameworks_data.items %}{{ data.pct }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor:'rgba(59,130,246,0.2)', borderColor:'#3b82f6', pointBackgroundColor:'#3b82f6'
+        }]
+    }, options: { scales: { r: { min: 0, max: 100 } } }
+});
+</script>
+{% endblock %}

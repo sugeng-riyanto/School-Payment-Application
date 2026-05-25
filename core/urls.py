@@ -1,0 +1,20 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('accounts.urls')),
+    path('payments/', include('payments.urls')),
+    path('finance/', include('finance.urls')),
+    path('eca/', include('eca.urls')),
+    path('activities/', include('activities.urls')),
+    path('reports/', include('reports.urls')),
+    path('calendars/', include('calendars.urls')),
+    path('info/', include('public_info.urls')),
+    path('compliance/', include('compliance.urls')),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

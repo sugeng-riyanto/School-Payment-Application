@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Program Khusus{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Program Khusus</h1>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h2 class="font-semibold mb-4">Tambah Program Khusus</h2>
+        <form method="post" class="grid md:grid-cols-3 gap-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            <input type="text" name="name" placeholder="Nama Program" required class="border rounded px-3 py-2">
+            <textarea name="description" placeholder="Deskripsi" required class="border rounded px-3 py-2 md:col-span-2" rows="3"></textarea>
+            <input type="text" name="target_level" placeholder="Target Jenjang (SD/SMP/SMA)" class="border rounded px-3 py-2">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Tambah</button>
+        </form>
+    </div>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50"><tr><th class="p-3 text-left">Nama</th><th class="p-3 text-left">Deskripsi</th><th class="p-3 text-left">Target</th><th class="p-3 text-left">Status</th><th class="p-3 text-left">Aksi</th></tr></thead>
+            <tbody>
+                {% for p in programs %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3 font-medium">{{ p.name }}</td>
+                    <td class="p-3 text-sm text-gray-600">{{ p.description|truncatewords:15 }}</td>
+                    <td class="p-3">{{ p.target_level|default:'-' }}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-xs rounded-full {% if p.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ p.is_active|yesno:"Aktif,Nonaktif" }}
+                        </span>
+                    </td>
+                    <td class="p-3 flex gap-2">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle">
+                            <input type="hidden" name="pk" value="{{ p.id }}">
+                            <button type="submit" class="text-yellow-600 hover:text-yellow-800 text-sm"><i class="fas {{ p.is_active|yesno:'fa-pause,fa-play' }} mr-1"></i>{{ p.is_active|yesno:"Nonaktifkan,Aktifkan" }}</button>
+                        </form>
+                        <form method="post" onsubmit="return confirm('Hapus program?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="pk" value="{{ p.id }}">
+                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm"><i class="fas fa-trash mr-1"></i>Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada program khusus</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

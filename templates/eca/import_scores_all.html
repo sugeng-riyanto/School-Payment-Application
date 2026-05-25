@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Import Nilai Semua ECA{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-2">Import Nilai Semua ECA</h1>
+        <p class="text-gray-500 mb-6">Satu file XLSX untuk semua program ECA</p>
+
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg text-sm">
+            <p class="font-medium mb-2">Format file XLSX (kolom urut):</p>
+            <ol class="list-decimal list-inside space-y-1 text-gray-600">
+                <li><strong>Nama Siswa</strong> - harus cocok dengan database</li>
+                <li><strong>Nama Program ECA</strong> - harus cocok dengan database</li>
+                <li><strong>Score</strong> - angka (contoh: 85.5)</li>
+                <li><strong>Keterangan</strong> (opsional)</li>
+            </ol>
+        </div>
+        <div class="mb-4">
+            <a href="{% url 'eca:download_all_scores_template' %}" class="inline-block bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                <i class="fas fa-download mr-1"></i>Download Template XLSX
+            </a>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".xlsx,.xls" required class="w-full px-4 py-2 border rounded-lg">
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-upload mr-2"></i>Import
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

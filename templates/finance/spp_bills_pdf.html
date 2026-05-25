@@ -1,0 +1,6 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>SPP Bills</title>
+<style>body{font-family:DejaVu Sans;font-size:10px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:4px;text-align:left;}th{background:#f5f5f5;}</style>
+</head><body><h2>Laporan Tagihan SPP</h2>
+<table><thead><tr><th>NISN</th><th>Nama</th><th>Kelas</th><th>Bulan</th><th>Tahun</th><th>Nominal</th><th>Status</th></tr></thead>
+<tbody>{% for b in bills %}<tr><td>{{ b.student.nisn }}</td><td>{{ b.student.full_name }}</td><td>{{ b.student.class_grade }}</td><td>{{ b.get_month_display }}</td><td>{{ b.year }}</td><td>Rp{{ b.amount|floatformat:0 }}</td><td>{{ b.is_paid|yesno:"Lunas,Belum" }}</td></tr>{% endfor %}</tbody>
+</table></body></html>

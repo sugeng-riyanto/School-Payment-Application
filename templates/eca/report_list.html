@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Laporan ECA{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Laporan ECA</h1>
+        <div class="flex gap-2">
+            <a href="{% url 'eca:export_eca_report_xlsx' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"><i class="fas fa-file-excel mr-1"></i>Download XLSX</a>
+            {% if user.role == 'admin' or user.role == 'eca_director' or user.role == 'tu' %}
+            <a href="{% url 'eca:create_eca_report' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"><i class="fas fa-plus mr-1"></i>Buat Laporan</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="text-sm text-gray-500 mb-1">Total Pemasukan (Disetujui)</h3>
+            <div class="text-2xl font-bold text-green-600">Rp{{ total_revenue|default:0|floatformat:0 }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="text-sm text-gray-500 mb-1">Total Tagihan</h3>
+            <div class="text-2xl font-bold text-blue-600">Rp{{ total_billed|default:0|floatformat:0 }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="text-sm text-gray-500 mb-1">Terkumpul</h3>
+            <div class="text-2xl font-bold text-indigo-600">Rp{{ total_collected|default:0|floatformat:0 }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="text-sm text-gray-500 mb-1">Sisa Tunggakan</h3>
+            <div class="text-2xl font-bold text-red-600">Rp{{ outstanding|default:0|floatformat:0 }}</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="font-semibold mb-3">Kontribusi Pemasukan per Program</h3>
+            <canvas id="contribChart" height="200"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="font-semibold mb-3">Tagihan vs Pemasukan per Program</h3>
+            <canvas id="compChart" height="200"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="font-semibold mb-3">Revenue per Program</h3>
+            <canvas id="revChart" height="200"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="font-semibold mb-3">Status Laporan</h3>
+            <canvas id="statusPieChart" height="200"></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <h3 class="font-semibold mb-3">Jumlah Siswa per Program</h3>
+            <canvas id="studentsChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="w-full text-left">
+            <thead><tr class="bg-gray-100"><th class="p-3">Program</th><th class="p-3">Periode</th><th class="p-3">Siswa</th><th class="p-3">Lunas</th><th class="p-3">Revenue</th><th class="p-3">Status</th><th class="p-3">Aksi</th></tr></thead>
+            <tbody>
+                {% for r in reports %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3">{{ r.program.name }}</td>
+                    <td class="p-3">{{ r.get_period_display }}</td>
+                    <td class="p-3">{{ r.total_students }}</td>
+                    <td class="p-3">{{ r.total_paid }}</td>
+                    <td class="p-3">Rp {{ r.total_revenue|default:0|floatformat:0 }}</td>
+                    <td class="p-3">
+                        {% if r.status == 'approved' %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Disetujui</span>
+                        {% elif r.status == 'revised' %}
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">Revisi</span>
+                        {% elif r.status == 'rejected' %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Ditolak</span>
+                        {% elif r.status == 'submitted' %}
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Diajukan</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Draft</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-3">
+                        {% if user.role == 'admin' or user.role == 'kepsek' or user.role == 'vp_activity' %}
+                        <a href="{% url 'eca:review_eca_report' r.id %}" class="text-blue-600 hover:underline text-sm">Review</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="p-6 text-center text-gray-500">Belum ada laporan ECA.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if contrib_programs and contrib_amounts %}
+new Chart(document.getElementById('contribChart'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ contrib_programs|safe }},
+        datasets: [{ data: {{ contrib_amounts|safe }}, backgroundColor: ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#6366F1'] }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+{% endif %}
+{% if comp_programs and comp_billed %}
+new Chart(document.getElementById('compChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ comp_programs|safe }},
+        datasets: [
+            { label: 'Tagihan (Rp)', data: {{ comp_billed|safe }}, backgroundColor: '#F59E0B' },
+            { label: 'Pemasukan (Rp)', data: {{ comp_collected|safe }}, backgroundColor: '#10B981' }
+        ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+{% endif %}
+{% if reports %}
+new Chart(document.getElementById('revChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ rev_programs|safe }},
+        datasets: [{ label: 'Revenue (Rp)', data: {{ rev_amounts|safe }}, backgroundColor: '#3B82F6' }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+new Chart(document.getElementById('statusPieChart'), {
+    type: 'pie',
+    data: {
+        labels: {{ chart_rpt_status|safe }},
+        datasets: [{ data: {{ chart_rpt_counts|safe }}, backgroundColor: ['#10B981','#3B82F6','#F59E0B','#EF4444','#6B7280'] }]
+    },
+    options: { responsive: true }
+});
+new Chart(document.getElementById('studentsChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ stud_programs|safe }},
+        datasets: [{ label: 'Siswa', data: {{ stud_counts|safe }}, backgroundColor: '#8B5CF6' }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+});
+{% endif %}
+</script>
+{% endblock %}

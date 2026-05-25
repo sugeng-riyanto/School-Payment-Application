@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Kalender Akademik{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Kalender Akademik</h1>
+        {% if user.role == 'admin' or user.role == 'vp_activity' %}
+        <a href="{% url 'calendars:upload' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"><i class="fas fa-upload mr-1"></i>Upload Kalender</a>
+        {% endif %}
+    </div>
+
+    {% if recent_update %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg flex justify-between items-center">
+        <div>
+            <p class="font-semibold text-blue-800"><i class="fas fa-info-circle mr-1"></i>Update Terbaru</p>
+            <p class="text-blue-600 text-sm">{{ recent_update.title }} — {{ recent_update.update_notes|default:'Telah diperbarui' }}</p>
+            <p class="text-blue-400 text-xs">{{ recent_update.updated_at|timesince }} yang lalu</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-blue-400 hover:text-blue-600"><i class="fas fa-times"></i></button>
+    </div>
+    {% endif %}
+
+    <div class="grid gap-6">
+        {% for cal in calendars %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 pb-0 flex justify-between items-start">
+                <div class="flex-1">
+                    <h3 class="font-semibold text-lg">{{ cal.title }}</h3>
+                    <p class="text-gray-500 text-sm">{{ cal.description|truncatewords:30 }}</p>
+                    <div class="flex gap-4 mt-2 text-xs text-gray-400">
+                        <span>Diupload: {{ cal.created_at|date:"d/m/Y" }}</span>
+                        <span>Terakhir update: {{ cal.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    {% if cal.update_notes %}
+                    <p class="mt-2 text-sm text-blue-600"><i class="fas fa-pen mr-1"></i>{{ cal.update_notes }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex gap-2 ml-4">
+                    {% if cal.file %}
+                    <a href="{{ cal.file.url }}" download class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"><i class="fas fa-download mr-1"></i>Download</a>
+                    {% endif %}
+                    {% if user.role == 'admin' or user.role == 'vp_activity' %}
+                    <a href="{% url 'calendars:edit' cal.id %}" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 text-sm"><i class="fas fa-edit mr-1"></i>Edit</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% if cal.file %}
+            <div class="mt-4 bg-gray-100">
+                <iframe src="{{ cal.file.url }}" class="w-full h-[600px]" frameborder="0"></iframe>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="bg-white rounded-xl shadow-md p-12 text-center text-gray-500">
+            <i class="fas fa-calendar-alt text-4xl mb-4"></i>
+            <p>Belum ada kalender akademik</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

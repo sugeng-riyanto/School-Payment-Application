@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Konfirmasi Pembayaran SPP{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Konfirmasi Pembayaran SPP</h1>
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <p><strong>Siswa:</strong> {{ bill.student.full_name }}</p>
+            <p><strong>NIS:</strong> {{ bill.student.nis }}</p>
+            <p><strong>Bulan:</strong> {{ bill.get_month_display }} {{ bill.year }}</p>
+            <p><strong>Jumlah:</strong> Rp{{ bill.amount|floatformat:0 }}</p>
+            <p><strong>VA:</strong> {{ bill.virtual_account|default:"-" }}</p>
+            <p><strong>Status:</strong> {% if bill.is_paid %}<span class="text-green-600">Lunas</span>{% else %}<span class="text-red-600">Belum</span>{% endif %}</p>
+        </div>
+        {% with proofs=bill.proofs.all %}
+        {% if proofs %}
+        <div class="mb-4">
+            <h3 class="font-semibold mb-2">Bukti Pembayaran:</h3>
+            {% for p in proofs %}
+            <div class="mb-2 p-3 border rounded-lg bg-blue-50">
+                <a href="{{ p.image.url }}" target="_blank" class="text-blue-600 hover:underline">
+                    <i class="fas fa-file mr-1"></i>Lihat Bukti {{ forloop.counter }}
+                </a>
+                {% if p.description %}<p class="text-sm text-gray-500 mt-1">{{ p.description }}</p>{% endif %}
+                {% if p.is_verified %}<span class="text-green-600 text-xs"><i class="fas fa-check-circle mr-1"></i>Terverifikasi</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% if not bill.is_paid %}
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Virtual Account</label>
+                <input type="text" name="virtual_account" value="{{ bill.virtual_account }}" class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Metode Pembayaran</label>
+                <select name="payment_method" class="w-full px-4 py-2 border rounded-lg">
+                    <option value="manual">Manual (TU)</option>
+                    <option value="midtrans">Midtrans</option>
+                    <option value="transfer">Transfer Bank</option>
+                    <option value="va">Virtual Account</option>
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                <i class="fas fa-check mr-2"></i>Konfirmasi Lunas
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'finance:spp_bill_list' %}" class="mt-4 inline-block text-blue-600 hover:underline text-sm"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+    </div>
+</div>
+{% endblock %}

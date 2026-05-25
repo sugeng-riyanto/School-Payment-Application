@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Review Laporan DPP{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Review Laporan DPP</h1>
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <p><strong>Jenjang:</strong> {{ report.grade }}</p>
+            <p><strong>Kategori:</strong> {{ report.get_category_display }}</p>
+            <p><strong>Total Tagihan:</strong> Rp{{ report.total_amount|floatformat:0 }}</p>
+            <p><strong>Terkumpul:</strong> Rp{{ report.total_collected|floatformat:0 }}</p>
+            <p><strong>Status:</strong> {{ report.get_status_display }}</p>
+            {% if report.rejection_notes %}<p><strong>Catatan:</strong> {{ report.rejection_notes }}</p>{% endif %}
+        </div>
+        {% if report.status == 'submitted' %}
+        <div class="space-y-3">
+            <form method="post">
+                {% csrf_token %}<input type="hidden" name="action" value="approve">
+                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"><i class="fas fa-check mr-2"></i>Setujui</button>
+            </form>
+            <form method="post">
+                {% csrf_token %}<input type="hidden" name="action" value="revise">
+                <textarea name="notes" rows="3" class="w-full border rounded-lg p-2" placeholder="Catatan revisi..."></textarea>
+                <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600"><i class="fas fa-edit mr-2"></i>Minta Revisi</button>
+            </form>
+            <form method="post">
+                {% csrf_token %}<input type="hidden" name="action" value="reject">
+                <textarea name="notes" rows="3" class="w-full border rounded-lg p-2" placeholder="Alasan penolakan..."></textarea>
+                <button type="submit" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"><i class="fas fa-times mr-2"></i>Tolak</button>
+            </form>
+        </div>
+        {% endif %}
+        <a href="{% url 'finance:dpp_report_list' %}" class="mt-4 inline-block text-blue-600 hover:underline text-sm"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+    </div>
+</div>
+{% endblock %}

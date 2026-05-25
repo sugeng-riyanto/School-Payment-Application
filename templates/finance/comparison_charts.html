@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Komparasi Tahunan{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Komparasi Pembayaran per Tahun</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-4">SPP per Tahun Ajaran</h2>
+            <canvas id="sppChart" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-4">DPP per Tahun Ajaran</h2>
+            <canvas id="dppChart" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-4">Cambridge per Tahun Ajaran</h2>
+            <canvas id="camChart" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-4">Perbandingan Bulanan (Tahun Aktif)</h2>
+            <canvas id="monthlyChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const yearLabels = {{ year_labels|safe }};
+const colors = ['rgba(59,130,246,0.8)', 'rgba(16,185,129,0.8)', 'rgba(245,158,11,0.8)', 'rgba(139,92,246,0.8)', 'rgba(239,68,68,0.8)', 'rgba(236,72,153,0.8)', 'rgba(14,165,233,0.8)'];
+new Chart(document.getElementById('sppChart'), {
+    type: 'bar',
+    data: {
+        labels: yearLabels,
+        datasets: [{
+            label: 'SPP Terkumpul',
+            data: {{ spp_data|safe }},
+            backgroundColor: colors.slice(0, yearLabels.length),
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp' + v.toLocaleString() } } } }
+});
+new Chart(document.getElementById('dppChart'), {
+    type: 'bar',
+    data: {
+        labels: yearLabels,
+        datasets: [{
+            label: 'DPP Terkumpul',
+            data: {{ dpp_data|safe }},
+            backgroundColor: colors.slice(0, yearLabels.length),
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp' + v.toLocaleString() } } } }
+});
+new Chart(document.getElementById('camChart'), {
+    type: 'bar',
+    data: {
+        labels: yearLabels,
+        datasets: [{
+            label: 'Cambridge Terkumpul',
+            data: {{ cam_data|safe }},
+            backgroundColor: colors.slice(0, yearLabels.length),
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp' + v.toLocaleString() } } } }
+});
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'line',
+    data: {
+        labels: {{ month_labels|safe }},
+        datasets: [
+            { label: 'SPP', data: {{ monthly_spp|safe }}, borderColor: '#3b82f6', tension: 0.3, fill: false },
+            { label: 'Cambridge', data: {{ monthly_cam|safe }}, borderColor: '#f59e0b', tension: 0.3, fill: false },
+        ]
+    },
+    options: { responsive: true,
+        scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp' + v.toLocaleString() } } } }
+});
+</script>
+{% endblock %}

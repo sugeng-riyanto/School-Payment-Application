@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Edit User{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Edit User: {{ u.username }}</h1>
+    <form method="post" class="bg-white rounded-xl shadow-md p-6 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium mb-1">Username</label>
+            <input type="text" value="{{ u.username }}" disabled class="w-full border rounded px-3 py-2 bg-gray-100 text-gray-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Nama Lengkap</label>
+            <input type="text" name="first_name" value="{{ u.first_name }}" class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Role</label>
+            <select name="role" class="w-full border rounded px-3 py-2">
+                {% for r_val, r_label in u.ROLE_CHOICES %}
+                <option value="{{ r_val }}" {% if u.role == r_val %}selected{% endif %}>{{ r_label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Jenjang</label>
+            <select name="assigned_level" class="w-full border rounded px-3 py-2">
+                <option value="">Semua Jenjang</option>
+                {% for l_val, l_label in u.LEVEL_CHOICES %}
+                <option value="{{ l_val }}" {% if u.assigned_level == l_val %}selected{% endif %}>{{ l_label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Email</label>
+            <input type="email" name="email" value="{{ u.email|default:'' }}" class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">No. HP</label>
+            <input type="text" name="phone" value="{{ u.phone|default:'' }}" class="w-full border rounded px-3 py-2">
+        </div>
+        <div class="flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Simpan</button>
+            <a href="{% url 'accounts:user_list' %}" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">Kembali</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

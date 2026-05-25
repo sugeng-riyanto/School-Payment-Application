@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Buat Laporan ECA{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Buat Laporan ECA</h1>
+    <form method="post" class="bg-white rounded-lg shadow p-6 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium mb-1">Program ECA</label>
+            <select name="program" required class="w-full border rounded px-3 py-2">
+                <option value="">-- Pilih Program --</option>
+                {% for p in programs %}
+                <option value="{{ p.id }}">{{ p.name }} - {{ p.grade }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Periode</label>
+            <select name="period" required class="w-full border rounded px-3 py-2">
+                <option value="monthly">Bulanan</option>
+                <option value="semester">Semester</option>
+                <option value="final">Akhir Tahun</option>
+            </select>
+        </div>
+        <p class="text-sm text-gray-500">Laporan akan diisi otomatis berdasarkan data registrasi program yang sudah disetujui dan dibayar.</p>
+        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Buat & Ajukan</button>
+    </form>
+</div>
+{% endblock %}

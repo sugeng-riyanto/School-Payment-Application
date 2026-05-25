@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}History Pembayaran{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">History Pembayaran</h1>
+
+    <!-- Filter Panel -->
+    <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+        <form method="get" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Cari</label>
+                <input type="text" name="q" value="{{ filter_q }}" placeholder="Nama/NISN/Invoice" class="w-full border rounded px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Tipe</label>
+                <select name="type" class="w-full border rounded px-2 py-1.5 text-sm">
+                    <option value="">Semua</option>
+                    <option value="spp" {% if filter_type == 'spp' %}selected{% endif %}>SPP</option>
+                    <option value="dpp" {% if filter_type == 'dpp' %}selected{% endif %}>DPP</option>
+                    <option value="eca" {% if filter_type == 'eca' %}selected{% endif %}>ECA</option>
+                    <option value="kegiatan" {% if filter_type == 'kegiatan' %}selected{% endif %}>Uang Kegiatan</option>
+                    <option value="cambridge" {% if filter_type == 'cambridge' %}selected{% endif %}>Cambridge</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select name="status" class="w-full border rounded px-2 py-1.5 text-sm">
+                    <option value="">Semua</option>
+                    <option value="success" {% if filter_status == 'success' %}selected{% endif %}>Success</option>
+                    <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="failed" {% if filter_status == 'failed' %}selected{% endif %}>Failed</option>
+                    <option value="expired" {% if filter_status == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Bulan</label>
+                <select name="month" class="w-full border rounded px-2 py-1.5 text-sm">
+                    <option value="">Semua</option>
+                    {% for m_num, m_name in month_choices %}
+                    <option value="{{ m_num }}" {% if filter_month|stringformat:'s' == m_num|stringformat:'s' %}selected{% endif %}>{{ m_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Tahun Ajaran</label>
+                <select name="year" class="w-full border rounded px-2 py-1.5 text-sm">
+                    <option value="">Semua</option>
+                    {% for y in years %}
+                    <option value="{{ y.id }}" {% if selected_year|stringformat:'s' == y.id|stringformat:'s' %}selected{% endif %}>{{ y.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Dari Tgl</label>
+                <input type="date" name="date_from" value="{{ filter_date_from }}" class="w-full border rounded px-2 py-1.5 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Sampai Tgl</label>
+                <input type="date" name="date_to" value="{{ filter_date_to }}" class="w-full border rounded px-2 py-1.5 text-sm">
+            </div>
+            <div class="flex items-end space-x-1">
+                <button type="submit" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700"><i class="fas fa-search mr-1"></i>Filter</button>
+                <a href="{% url 'finance:payment_history' %}" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300">Reset</a>
+            </div>
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <input type="hidden" name="dir" value="{{ dir }}">
+        </form>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <div class="bg-white rounded-xl shadow-md p-3">
+            <p class="text-xs text-gray-500">Hasil Filter</p>
+            <p class="text-xl font-bold text-blue-600">{{ filter_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-3">
+            <p class="text-xs text-gray-500">Total Nominal</p>
+            <p class="text-lg font-bold text-green-600">Rp{{ total_all|floatformat:0 }}</p>
+        </div>
+        {% for bt in by_type %}
+        <div class="bg-white rounded-xl shadow-md p-3">
+            <p class="text-xs text-gray-500">{{ bt.transaction_type|title }}</p>
+            <p class="text-lg font-bold text-purple-600">{{ bt.count }}x (Rp{{ bt.total|floatformat:0 }})</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Sort Controls -->
+    <div class="flex items-center gap-2 mb-3 text-sm text-gray-600">
+        <span class="font-medium">Urut:</span>
+        {% for label, field in sort_options.items %}
+        <a href="?sort={{ field }}&dir={% if sort == field and dir == 'asc' %}desc{% else %}asc{% endif %}&q={{ filter_q }}&type={{ filter_type }}&status={{ filter_status }}&year={{ selected_year }}&date_from={{ filter_date_from }}&date_to={{ filter_date_to }}&month={{ filter_month }}" class="px-2 py-1 rounded {% if sort == field %}bg-blue-100 text-blue-700 font-medium{% else %}hover:bg-gray-100{% endif %}">
+            {{ label }}
+            {% if sort == field %}<i class="fas fa-caret-{% if dir == 'asc' %}up{% else %}down{% endif %}"></i>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Tgl</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Siswa</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">NISN</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Kelas</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Tipe</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Jumlah</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Status</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Metode</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">Invoice</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3 text-sm whitespace-nowrap">{{ t.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="p-3 text-sm">{{ t.student.full_name }}{% if not t.student.is_active %} <span class="text-red-500 text-xs font-semibold">(LULUS)</span>{% endif %}</td>
+                    <td class="p-3 text-sm">{{ t.student.nisn }}</td>
+                    <td class="p-3 text-sm">{{ t.student.class_grade }}</td>
+                    <td class="p-3"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{{ t.get_transaction_type_display }}</span></td>
+                    <td class="p-3 font-medium text-sm">Rp{{ t.amount|floatformat:0 }}</td>
+                    <td class="p-3">{% if t.status == 'success' %}<span class="text-green-600 text-sm font-medium">Lunas</span>{% elif t.status == 'pending' %}<span class="text-yellow-600 text-sm">Pending</span>{% else %}<span class="text-red-600 text-sm">{{ t.get_status_display }}</span>{% endif %}</td>
+                    <td class="p-3 text-sm">{{ t.payment_method|default:"-" }}</td>
+                    <td class="p-3">
+                        {% if t.invoice_number %}
+                        <a href="{% url 'payments:download_invoice' t.id %}" class="text-blue-600 hover:underline text-sm" target="_blank"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="p-6 text-center text-gray-500">{% if filter_q or filter_type or filter_status or filter_date_from %}Tidak ada hasil dengan filter tersebut.{% else %}Belum ada transaksi.{% endif %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-xs text-gray-400 mt-2">Menampilkan maksimal 500 transaksi. Gunakan filter untuk hasil lebih spesifik.</p>
+</div>
+{% endblock %}

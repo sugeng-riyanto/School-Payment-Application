@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Informasi Internal{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Informasi Internal</h1>
+        {% if user.role in 'admin,tu,vp_activity' %}
+        <a href="{% url 'accounts:internal_info_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"><i class="fas fa-plus mr-1"></i>Buat Informasi</a>
+        {% endif %}
+    </div>
+
+    {% if blast_stats %}
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold text-gray-700"><i class="fas fa-envelope-open-text text-blue-500 mr-2"></i>Pesan Blast Email</h2>
+            <div class="flex gap-3 text-sm">
+                <span class="px-3 py-1.5 bg-green-100 text-green-800 rounded-lg"><i class="fas fa-check-circle mr-1"></i>Dibaca: {{ blast_stats.read }}</span>
+                <span class="px-3 py-1.5 bg-red-100 text-red-800 rounded-lg"><i class="fas fa-envelope mr-1"></i>Belum Dibaca: {{ blast_stats.unread }}</span>
+                <span class="px-3 py-1.5 bg-gray-100 text-gray-800 rounded-lg"><i class="fas fa-envelope mr-1"></i>Total: {{ blast_stats.total }}</span>
+            </div>
+        </div>
+        <div class="space-y-2">
+            {% for log in blast_logs %}
+            <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-4">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-semibold text-gray-800">{{ log.subject }}</h3>
+                            {% if log.is_read %}
+                            <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs"><i class="fas fa-check mr-1"></i>Dibaca {{ log.read_at|date:"d/m H:i" }}</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs"><i class="fas fa-clock mr-1"></i>Belum Dibaca</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex gap-2 text-xs text-gray-500 mt-1">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{{ log.get_payment_type_display }}</span>
+                            <span class="px-2 py-0.5 bg-gray-100 rounded">{{ log.sent_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2 text-gray-700 whitespace-pre-line text-sm">{{ log.body|truncatewords:40 }}</div>
+                {% if log.student %}
+                <div class="mt-1 text-xs text-gray-400">Untuk: {{ log.student.full_name }} ({{ log.student.nisn }}) — {{ log.recipient_email }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif blast_logs %}
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold mb-3 text-gray-700"><i class="fas fa-envelope-open-text text-blue-500 mr-2"></i>Pesan Blast Email</h2>
+        <div class="space-y-2">
+            {% for log in blast_logs %}
+            <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">{{ log.subject }}</h3>
+                        <div class="flex gap-2 text-xs text-gray-500 mt-1">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{{ log.get_payment_type_display }}</span>
+                            <span class="px-2 py-0.5 bg-gray-100 rounded">{{ log.sent_at|date:"d/m/Y H:i" }}</span>
+                            {% if log.is_read %}
+                            <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded"><i class="fas fa-check mr-1"></i>Dibaca</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded"><i class="fas fa-clock mr-1"></i>Baru</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2 text-gray-700 whitespace-pre-line text-sm">{{ log.body }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="space-y-4">
+        {% for info in infos %}
+        <div class="bg-white rounded-xl shadow-md p-6 {% if not info.is_published %}border-l-4 border-yellow-400{% endif %}">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-lg font-semibold">{{ info.title }}</h2>
+                    <div class="flex gap-2 text-xs text-gray-500 mt-1">
+                        {% for l in info.get_levels_list %}<span class="px-2 py-0.5 bg-gray-100 rounded">{{ l|upper }}</span> {% endfor %}
+                        {% if not info.is_published %}<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded">Menunggu Approval</span>{% endif %}
+                        {% if info.is_published %}<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded">Published</span>{% endif %}
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    {% if user.role in 'admin,kepsek' and not info.is_published %}
+                    <a href="{% url 'accounts:internal_info_approve' info.id %}" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"><i class="fas fa-check"></i></a>
+                    {% endif %}
+                    {% if user.role in 'admin,tu,vp_activity' %}
+                    <a href="{% url 'accounts:internal_info_edit' info.id %}" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'accounts:internal_info_delete' info.id %}" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700" onclick="return confirm('Hapus?')"><i class="fas fa-trash"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-3 text-gray-700 whitespace-pre-line">{{ info.content }}</div>
+            {% if info.file %}
+            <a href="{{ info.file.url }}" class="mt-2 inline-flex items-center text-blue-600 hover:underline text-sm" target="_blank"><i class="fas fa-paperclip mr-1"></i>Lampiran</a>
+            {% endif %}
+            {% if info.google_drive_link %}
+            <a href="{{ info.google_drive_link }}" class="mt-2 inline-flex items-center text-blue-600 hover:underline text-sm ml-3" target="_blank"><i class="fab fa-google-drive mr-1"></i>Google Drive</a>
+            {% endif %}
+            <div class="mt-2 text-xs text-gray-400">Dibuat oleh {{ info.created_by.get_full_name|default:info.created_by.username }} pada {{ info.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% empty %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">Belum ada informasi internal.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

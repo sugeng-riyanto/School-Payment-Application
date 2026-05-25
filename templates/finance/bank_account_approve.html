@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Persetujuan Rekening Bank{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Persetujuan Rekening Bank</h1>
+    <div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+        <div class="p-4 bg-gray-50 rounded-lg">
+            <p><strong>Jenjang:</strong> {{ account.get_level_display }}</p>
+            <p><strong>Tipe Pembayaran:</strong> {{ account.get_payment_type_display }}</p>
+            <p><strong>Bank:</strong> {{ account.bank_name }}</p>
+            <p><strong>No. Rekening:</strong> <span class="font-mono">{{ account.account_number }}</span></p>
+            <p><strong>Atas Nama:</strong> {{ account.account_holder }}</p>
+            <p><strong>Status:</strong>
+                <span class="px-2 py-0.5 rounded-full text-xs
+                    {% if account.status == 'approved' %}bg-green-100 text-green-800
+                    {% elif account.status == 'rejected' %}bg-red-100 text-red-800
+                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {{ account.get_status_display }}
+                </span>
+            </p>
+            {% if account.notes %}
+            <p class="mt-2"><strong>Catatan:</strong> {{ account.notes }}</p>
+            {% endif %}
+        </div>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan (opsional)</label>
+                <textarea name="notes" rows="3" class="w-full border rounded px-3 py-2">{{ account.notes }}</textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" name="action" value="approved" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"><i class="fas fa-check mr-1"></i>Setujui</button>
+                <button type="submit" name="action" value="rejected" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"><i class="fas fa-times mr-1"></i>Tolak</button>
+                <a href="{% url 'finance:bank_account_list' %}" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">Kembali</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

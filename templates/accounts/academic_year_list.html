@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Tahun Ajaran{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Tahun Ajaran</h1>
+        {% if user.role in 'admin,tu,vp_activity' %}
+        <a href="{% url 'accounts:academic_year_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"><i class="fas fa-plus mr-1"></i>Tambah</a>
+        {% endif %}
+    </div>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr><th class="p-3 text-left">Nama</th><th class="p-3 text-left">Mulai</th><th class="p-3 text-left">Selesai</th><th class="p-3 text-left">Aktif</th><th class="p-3 text-left">Aksi</th></tr>
+            </thead>
+            <tbody>
+                {% for y in years %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3 font-medium">{{ y.name }}</td>
+                    <td class="p-3">{{ y.start_date|date:"d/m/Y" }}</td>
+                    <td class="p-3">{{ y.end_date|date:"d/m/Y" }}</td>
+                    <td class="p-3">{% if y.is_active %}<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Aktif</span>{% endif %}</td>
+                    <td class="p-3">
+                        {% if user.role in 'admin,tu,vp_activity' %}
+                        <a href="{% url 'accounts:academic_year_edit' y.id %}" class="text-yellow-600 hover:underline text-sm mr-2"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'accounts:academic_year_delete' y.id %}" class="text-red-600 hover:underline text-sm" onclick="return confirm('Hapus?')"><i class="fas fa-trash"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

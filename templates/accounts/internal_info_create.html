@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{% if info %}Edit{% else %}Buat{% endif %} Informasi Internal{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">{% if info %}Edit{% else %}Buat{% endif %} Informasi Internal</h1>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium mb-1">Judul</label>
+                <input type="text" name="title" value="{{ info.title|default:'' }}" required class="w-full border rounded-lg p-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Konten</label>
+                <textarea name="content" rows="8" required class="w-full border rounded-lg p-2">{{ info.content|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Jenjang</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="level" value="sd" {% if info and 'sd' in info.get_levels_list %}checked{% endif %}> SD
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="level" value="smp" {% if info and 'smp' in info.get_levels_list %}checked{% endif %}> SMP
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="level" value="sma" {% if info and 'sma' in info.get_levels_list %}checked{% endif %}> SMA
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="level" value="all" {% if info and 'all' in info.get_levels_list %}checked{% endif %}> Semua Level
+                    </label>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Tautan Google Drive</label>
+                <input type="url" name="google_drive_link" value="{{ info.google_drive_link|default:'' }}" placeholder="https://drive.google.com/..." class="w-full border rounded-lg p-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Lampiran File</label>
+                <input type="file" name="file" class="w-full border rounded-lg p-2">
+                {% if info.file %}<p class="text-sm text-gray-500 mt-1">Current: <a href="{{ info.file.url }}" target="_blank">{{ info.file.name }}</a></p>{% endif %}
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-save mr-2"></i>{% if info %}Simpan Perubahan{% else %}Buat Informasi{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

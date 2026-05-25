@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Jenjang{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Jenjang (Grade)</h1>
+    <div class="flex gap-2">
+        <a href="{% url 'accounts:import_grade' %}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"><i class="fas fa-upload mr-1"></i>Import XLSX</a>
+        <a href="{% url 'accounts:download_template' 'grade' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"><i class="fas fa-download mr-1"></i>Template XLSX</a>
+        <a href="{% url 'accounts:create_grade' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"><i class="fas fa-plus mr-1"></i>Tambah Jenjang</a>
+    </div>
+</div>
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full text-left">
+        <thead><tr class="bg-gray-100"><th class="p-3">Nama</th><th class="p-3">Level</th><th class="p-3">Aksi</th></tr></thead>
+        <tbody>
+            {% for g in grades %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="p-3">{{ g.name }}</td>
+                <td class="p-3">{{ g.get_level_display }}</td>
+                <td class="p-3">
+                    <a href="{% url 'accounts:delete_grade' g.id %}" class="text-red-600 hover:text-red-800 text-sm" onclick="return confirm('Hapus jenjang {{ g.name }}?')"><i class="fas fa-trash mr-1"></i>Hapus</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="p-6 text-center text-gray-500">Belum ada jenjang</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

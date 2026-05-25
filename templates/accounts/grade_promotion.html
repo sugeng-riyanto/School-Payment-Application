@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Kenaikan Kelas{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Kenaikan Kelas (Promotion)</h1>
+
+    <!-- Auto Promote -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4">Naikkan Semua Kelas</h2>
+        <p class="text-gray-600 text-sm mb-4">Siswa SD &rarr; SMP, SMP &rarr; SMA. Siswa SMA akan tetap di level yang sama.</p>
+        <form method="post" onsubmit="return confirm('Naikkan semua siswa ke kelas berikutnya?')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="promote_all">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"><i class="fas fa-arrow-up mr-2"></i>Naikkan Semua Kelas</button>
+        </form>
+    </div>
+
+    <!-- Custom Promotion -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-lg font-semibold mb-4">Custom Pindah Kelas (per Kelas Saat Ini)</h2>
+        {% for class_name, students_list in grouped.items %}
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-semibold mb-2">{{ class_name }} ({{ students_list|length }} siswa)</h3>
+            <form method="post" class="space-y-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="promote_selected">
+                <label class="flex items-center gap-2 text-sm mb-1">
+                    <input type="checkbox" class="check-all-class"> <span class="text-blue-600 font-medium">Check All</span>
+                </label>
+                <div class="max-h-48 overflow-y-auto space-y-1">
+                    {% for s in students_list %}
+                    <label class="flex items-center gap-2 text-sm {% if not s.is_active %}text-gray-400 bg-gray-100 rounded px-1{% endif %}">
+                        <input type="checkbox" name="student_ids" value="{{ s.nisn }}">
+                        {{ s.full_name }} ({{ s.nisn }})
+                        {% if not s.is_active %}<span class="text-red-500 text-xs font-semibold">(LULUS)</span>{% endif %}
+                        {% if s.is_active %}
+                        <form method="post" class="inline" onsubmit="return confirm('Luluskan {{ s.full_name }}?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="graduate_single">
+                            <input type="hidden" name="student_nisn" value="{{ s.nisn }}">
+                            <button type="submit" class="text-red-600 hover:text-red-800 text-xs ml-1" title="Luluskan"><i class="fas fa-graduation-cap"></i></button>
+                        </form>
+                        {% endif %}
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <select name="target_class" required class="border rounded px-3 py-1 text-sm">
+                        <option value="">-- Pilih Kelas Tujuan --</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700">Pindahkan</button>
+                </div>
+            </form>
+        </div>
+        {% empty %}
+        <p class="text-gray-500">Belum ada siswa.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.check-all-class').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+        var form = this.closest('form');
+        form.querySelectorAll('.student-check').forEach(function(c) { c.checked = cb.checked; });
+    });
+});
+</script>
+{% endblock %}

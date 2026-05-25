@@ -1,0 +1,13 @@
+django>=6.0
+django-crispy-forms
+crispy-tailwind
+django-import-export
+openpyxl
+xlsxwriter
+weasyprint
+Pillow
+python-decouple
+midtransclient
+whitenoise
+gunicorn
+psycopg2-binary

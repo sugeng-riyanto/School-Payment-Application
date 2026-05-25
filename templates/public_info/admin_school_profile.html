@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Sekolah{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl font-bold mb-6">Profil Sekolah</h1>
+    
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- School Section -->
+        <section class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Informasi Sekolah</h2>
+            
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <!-- Nama Sekolah -->
+                <div>
+                    <label for="nama_sekolah" class="block text-sm font-medium text-gray-700 mb-1">Nama Sekolah</label>
+                    <input type="text" id="nama_sekolah" name="nama_sekolah" value="{{ profile.nama_sekolah|default:'' }}" 
+                           class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Alamat -->
+                <div class="md:col-span-2">
+                    <label for="alamat" class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                    <textarea id="alamat" name="alamat" rows="3" 
+                              class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ profile.alamat|default:'' }}</textarea>
+                </div>
+                
+                <!-- Telepon -->
+                <div>
+                    <label for="telepon" class="block text-sm font-medium text-gray-700 mb-1">Telepon</label>
+                    <input type="tel" id="telepon" name="telepon" value="{{ profile.telepon|default:'' }}" 
+                           class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" name="email" value="{{ profile.email|default:'' }}" 
+                           class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Website -->
+                <div>
+                    <label for="website" class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                    <input type="url" id="website" name="website" value="{{ profile.website|default:'' }}" 
+                           class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Akreditasi -->
+                <div>
+                    <label for="akreditasi" class="block text-sm font-medium text-gray-700 mb-1">Akreditasi</label>
+                    <input type="text" id="akreditasi" name="akreditasi" value="{{ profile.akreditasi|default:'' }}" 
+                           class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Logo -->
+                <div>
+                    <label for="logo" class="block text-sm font-medium text-gray-700 mb-1">Logo Sekolah</label>
+                    <input type="file" id="logo" name="logo" 
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    {% if profile.logo %}
+                    <p class="mt-2 text-sm text-gray-600">Logo saat ini: <a href="{{ profile.logo.url }}" target="_blank" class="text-blue-600 underline">Lihat logo</a></p>
+                    {% endif %}
+                </div>
+                
+                <!-- Visi -->
+                <div class="md:col-span-2">
+                    <label for="visi" class="block text-sm font-medium text-gray-700 mb-1">Visi</label>
+                    <textarea id="visi" name="visi" rows="3" 
+                              class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ profile.visi|default:'' }}</textarea>
+                </div>
+                
+                <!-- Misi -->
+                <div class="md:col-span-2">
+                    <label for="misi" class="block text-sm font-medium text-gray-700 mb-1">Misi</label>
+                    <textarea id="misi" name="misi" rows="3" 
+                              class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ profile.misi|default:'' }}</textarea>
+                </div>
+                
+                <!-- Nilai-nilai Inti -->
+                <div class="md:col-span-2">
+                    <label for="nilai_nilai_inti" class="block text-sm font-medium text-gray-700 mb-1">Nilai-nilai Inti</label>
+                    <textarea id="nilai_nilai_inti" name="nilai_nilai_inti" rows="3" 
+                              class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ profile.nilai_nilai_inti|default:'' }}</textarea>
+                </div>
+                
+                <!-- Sejarah Singkat -->
+                <div class="md:col-span-2">
+                    <label for="sejarah_singkat" class="block text-sm font-medium text-gray-700 mb-1">Sejarah Singkat</label>
+                    <textarea id="sejarah_singkat" name="sejarah_singkat" rows="3" 
+                              class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ profile.sejarah_singkat|default:'' }}</textarea>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Per-Jenjang Section -->
+        <section class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Informasi Per Jenjang</h2>
+            
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {% for level, level_name in [('sd', 'SD'), ('smp', 'SMP'), ('sma', 'SMA')] %}
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-semibold mb-4 flex items-center">
+                        <i class="fas fa-school mr-2 text-blue-500"></i> Jenjang {{ level_name }}
+                    </h3>
+                    
+                    {% with info=level_info|get_item:level %}
+                    <div class="space-y-3">
+                        <!-- Akreditasi -->
+                        <div>
+                            <label for="{{ level }}_accreditation" class="block text-sm font-medium text-gray-700 mb-1">Akreditasi</label>
+                            <input type="text" id="{{ level }}_accreditation" name="{{ level }}_accreditation" 
+                                   value="{{ info.akreditasi|default:'' if info else '' }}" 
+                                   class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Link Akreditasi -->
+                        <div>
+                            <label for="{{ level }}_accreditation_link" class="block text-sm font-medium text-gray-700 mb-1">Link Akreditasi</label>
+                            <input type="url" id="{{ level }}_accreditation_link" name="{{ level }}_accreditation_link" 
+                                   value="{{ info.accreditation_link|default:'' if info else '' }}" 
+                                   class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Berlaku Dari -->
+                        <div>
+                            <label for="{{ level }}_accreditation_valid_from" class="block text-sm font-medium text-gray-700 mb-1">Berlaku Dari</label>
+                            <input type="date" id="{{ level }}_accreditation_valid_from" name="{{ level }}_accreditation_valid_from" 
+                                   value="{{ info.accreditation_valid_from|date:'Y-m-d' if info and info.accreditation_valid_from else '' }}" 
+                                   class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Izin Operasional -->
+                        <div>
+                            <label for="{{ level }}_izin_operasional" class="block text-sm font-medium text-gray-700 mb-1">Izin Operasional</label>
+                            <input type="text" id="{{ level }}_izin_operasional" name="{{ level }}_izin_operasional" 
+                                   value="{{ info.izin_operasional|default:'' if info else '' }}" 
+                                   class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <!-- Izin Berlaku Dari -->
+                        <div>
+                            <label for="{{ level }}_izin_valid_from" class="block text-sm font-medium text-gray-700 mb-1">Izin Berlaku Dari</label>
+                            <input type="date" id="{{ level }}_izin_valid_from" name="{{ level }}_izin_valid_from" 
+                                   value="{{ info.izin_valid_from|date:'Y-m-d' if info and info.izin_valid_from else '' }}" 
+                                   class="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    {% endwith %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        
+        <div class="flex justify-end mt-6">
+            <button type="submit" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Simpan Perubahan
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

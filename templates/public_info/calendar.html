@@ -1,0 +1,47 @@
+{% extends 'base_public.html' %}
+{% block title %}Kalender Akademik - {{ school.name }}{% endblock %}
+{% block content %}
+<div class="hero-gradient text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 class="text-3xl font-bold">Kalender Akademik</h1>
+        <p class="text-blue-200 mt-1">Jadwal semester, ujian, libur, dan agenda {{ school.name }}</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% for cal in calendars %}
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-8 card-hover">
+        <div class="p-8">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold mb-2">{{ cal.title }}</h2>
+                    <p class="text-gray-600 leading-relaxed mb-4">{{ cal.description|linebreaks }}</p>
+                    <div class="flex flex-wrap gap-4 text-sm text-gray-400">
+                        <span><i class="fas fa-calendar mr-1 text-blue-500"></i>{{ cal.created_at|date:"d F Y" }}</span>
+                        {% if cal.updated_at != cal.created_at %}
+                        <span><i class="fas fa-edit mr-1 text-orange-500"></i>Diperbarui {{ cal.updated_at|date:"d F Y" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if cal.file %}
+                <a href="{{ cal.file.url }}" target="_blank" class="bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fas fa-download"></i>
+                    <span class="hidden sm:inline">Download PDF</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% if cal.file %}
+        <div class="bg-gray-100 border-t">
+            <iframe src="{{ cal.file.url }}" class="w-full h-[500px]" frameborder="0"></iframe>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="text-center py-16 text-gray-400">
+        <i class="fas fa-calendar-alt text-5xl mb-4"></i>
+        <p>Belum ada kalender akademik.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

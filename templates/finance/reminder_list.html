@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Laporan Peringatan Pembayaran{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Laporan Peringatan Pembayaran</h1>
+        <div class="flex gap-2">
+            <a href="{% url 'finance:export_reminder_xlsx' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+            <a href="{% url 'finance:export_reminder_pdf' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left p-3">Siswa</th>
+                        <th class="text-left p-3">NISN</th>
+                        <th class="text-left p-3">Kelas</th>
+                        <th class="text-left p-3">Jenis</th>
+                        <th class="text-left p-3">Bulan</th>
+                        <th class="text-left p-3">Catatan</th>
+                        <th class="text-left p-3">Tgl Kirim</th>
+                        <th class="text-center p-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reminders %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="p-3 font-medium">{{ r.student.full_name }}</td>
+                        <td class="p-3 text-sm text-gray-600">{{ r.student.nisn }}</td>
+                        <td class="p-3 text-sm">{{ r.student.class_grade }}</td>
+                        <td class="p-3">{{ r.get_reminder_type_display }}</td>
+                        <td class="p-3 text-sm">{{ r.get_month_display|default:"-" }}</td>
+                        <td class="p-3 text-sm">{{ r.notes|truncatewords:15|default:"-" }}</td>
+                        <td class="p-3 text-sm">{{ r.sent_at|date:"d/m/Y H:i"|default:"-" }}</td>
+                        <td class="p-3 text-center">
+                            {% if r.is_read %}
+                            <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">Dibaca</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">Belum</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="p-4 text-center text-gray-500">Belum ada peringatan</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

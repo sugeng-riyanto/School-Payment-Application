@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Jenis Kegiatan{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">{{ action }} Jenis Kegiatan</h1>
+    <form method="post" class="bg-white rounded-lg shadow p-6 space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Nama Kegiatan</label>
+                <input type="text" name="name" value="{{ obj.name|default:'' }}" required class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Bulan</label>
+                <input type="text" name="month" value="{{ obj.month|default:'' }}" placeholder="e.g. Januari" class="w-full border rounded px-3 py-2">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Objectives/Goal</label>
+            <textarea name="objectives" rows="2" class="w-full border rounded px-3 py-2">{{ obj.objectives|default:'' }}</textarea>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Value Knowledge</label>
+                <input type="text" name="values_knowledge" value="{{ obj.values_knowledge|default:'' }}" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Value Faith</label>
+                <input type="text" name="values_faith" value="{{ obj.values_faith|default:'' }}" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Value Character</label>
+                <input type="text" name="values_character" value="{{ obj.values_character|default:'' }}" class="w-full border rounded px-3 py-2">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Budget</label>
+                <input type="number" name="budget" value="{{ obj.budget|default:'0' }}" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">PIC</label>
+                <input type="text" name="pic" value="{{ obj.pic|default:'' }}" class="w-full border rounded px-3 py-2">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Time Start</label>
+                <input type="date" name="time_start" value="{{ obj.time_start|date:'Y-m-d'|default:'' }}" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Time Finish</label>
+                <input type="date" name="time_finish" value="{{ obj.time_finish|date:'Y-m-d'|default:'' }}" class="w-full border rounded px-3 py-2">
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Notes</label>
+            <textarea name="notes" rows="2" class="w-full border rounded px-3 py-2">{{ obj.notes|default:'' }}</textarea>
+        </div>
+        <div class="flex gap-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Simpan</button>
+            <a href="{% url 'activities:type_list' %}" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Batal</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

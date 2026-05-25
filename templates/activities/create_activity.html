@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}{% if editing %}Edit{% else %}Buat{% endif %} Laporan Kegiatan{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">{% if editing %}Edit{% else %}Buat{% endif %} Laporan Kegiatan</h1>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kegiatan</label>
+                    <select name="activity_type" class="w-full px-4 py-2 border rounded-lg">
+                        <option value="">-- Pilih Jenis --</option>
+                        {% for t in activity_types %}
+                        <option value="{{ t.id }}" {% if activity.activity_type_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul Kegiatan</label>
+                    <input type="text" name="title" value="{{ activity.title|default:'' }}" required class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                    <input type="date" name="start_date" value="{{ activity.start_date|date:'Y-m-d'|default:'' }}" required class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
+                    <input type="date" name="end_date" value="{{ activity.end_date|date:'Y-m-d'|default:'' }}" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Kegiatan</label>
+                <textarea name="description" rows="5" required class="w-full px-4 py-2 border rounded-lg">{{ activity.description|default:'' }}</textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Budget Realisasi</label>
+                    <input type="number" name="budget_real" value="{{ activity.budget_real|default:'0' }}" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
+                    <input type="file" name="cover_image" accept="image/*" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <hr class="my-4">
+            <h3 class="font-semibold mb-2">Dokumentasi</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Link Google Drive 1</label>
+                    <input type="url" name="google_drive_link1" value="{{ activity.google_drive_link1|default:'' }}" placeholder="https://drive.google.com/..." class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Link Google Drive 2</label>
+                    <input type="url" name="google_drive_link2" value="{{ activity.google_drive_link2|default:'' }}" placeholder="https://drive.google.com/..." class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor Bukti/Invoice</label>
+                    <input type="text" name="invoice_number" value="{{ activity.invoice_number|default:'' }}" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Foto/PDF Bukti</label>
+                    <input type="file" name="evidences" multiple accept="image/*,.pdf" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <hr class="my-4">
+            <h3 class="font-semibold mb-2">Pemasukan & Pengeluaran</h3>
+            <div id="transactions">
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <select name="transaction_type_0" class="px-3 py-2 border rounded">
+                        <option value="income">Pemasukan</option>
+                        <option value="expense">Pengeluaran</option>
+                    </select>
+                    <input type="text" name="transaction_desc_0" placeholder="Keterangan" class="px-3 py-2 border rounded">
+                    <input type="number" name="transaction_amount_0" placeholder="Jumlah" class="px-3 py-2 border rounded">
+                </div>
+            </div>
+            <button type="button" onclick="addTransaction()" class="text-blue-600 text-sm hover:text-blue-800">
+                <i class="fas fa-plus mr-1"></i>Tambah transaksi
+            </button>
+
+            <hr class="my-4">
+            <h3 class="font-semibold mb-2">Tanda Tangan</h3>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-1 bg-white" id="sigContainer">
+                <canvas id="signatureCanvas" class="w-full cursor-crosshair" style="height:200px;touch-action:none;"></canvas>
+                <input type="hidden" name="signature_data" id="signatureInput" value="{{ activity.signature_data|default:'' }}">
+            </div>
+            <div class="flex gap-2 mt-1">
+                <button type="button" onclick="clearSignature()" class="text-red-600 text-sm hover:text-red-800">
+                    <i class="fas fa-eraser mr-1"></i>Hapus
+                </button>
+                <span class="text-xs text-gray-400 self-center">Tanda tangani dengan jari atau mouse di atas kotak</span>
+            </div>
+
+            <hr class="my-4">
+            <h3 class="font-semibold mb-2">Refleksi & Evaluasi</h3>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Refleksi</label>
+                <textarea name="reflection" rows="3" class="w-full px-4 py-2 border rounded-lg" placeholder="Apa yang berjalan baik dan apa yang bisa ditingkatkan?">{{ activity.reflection|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Evaluasi</label>
+                <textarea name="evaluation" rows="3" class="w-full px-4 py-2 border rounded-lg" placeholder="Evaluasi keseluruhan kegiatan">{{ activity.evaluation|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Catatan PIC</label>
+                <textarea name="pic_notes" rows="2" class="w-full px-4 py-2 border rounded-lg" placeholder="Catatan tambahan dari PIC">{{ activity.pic_notes|default:'' }}</textarea>
+            </div>
+
+            <hr class="my-4">
+            <div class="flex space-x-4">
+                <button type="submit" name="action" value="draft" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">
+                    <i class="fas fa-save mr-2"></i>Simpan Draft
+                </button>
+                <button type="submit" name="action" value="submitted" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-paper-plane mr-2"></i>Ajukan untuk Review PIC
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let txCount = 1;
+function addTransaction() {
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-3 gap-2 mb-2';
+    div.innerHTML = `
+        <select name="transaction_type_${txCount}" class="px-3 py-2 border rounded">
+            <option value="income">Pemasukan</option>
+            <option value="expense">Pengeluaran</option>
+        </select>
+        <input type="text" name="transaction_desc_${txCount}" placeholder="Keterangan" class="px-3 py-2 border rounded">
+        <input type="number" name="transaction_amount_${txCount}" placeholder="Jumlah" class="px-3 py-2 border rounded">
+    `;
+    document.getElementById('transactions').appendChild(div);
+    txCount++;
+}
+
+// ── Responsive Signature Pad ──
+(function() {
+    const canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const hidden = document.getElementById('signatureInput');
+    let drawing = false;
+
+    function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const w = rect.width - 4;
+        const oldData = canvas.toDataURL();
+        canvas.width = w;
+        canvas.height = 200;
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        // Restore existing signature after resize
+        if (oldData && oldData.length > 2000) {
+            const img = new Image();
+            img.onload = function() { ctx.drawImage(img, 0, 0, w, 200); };
+            img.src = oldData;
+        }
+    }
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
+    }
+
+    function startDraw(e) {
+        drawing = true;
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+    }
+    function draw(e) {
+        if (!drawing) return;
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+    }
+    function stopDraw() {
+        if (!drawing) return;
+        drawing = false;
+        hidden.value = canvas.toDataURL();
+    }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
+    canvas.addEventListener('touchend', (e) => { e.preventDefault(); stopDraw(); }, { passive: false });
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Load existing signature
+    const existing = hidden.value;
+    if (existing && existing.length > 100) {
+        const img = new Image();
+        img.onload = function() { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+        img.src = existing;
+    }
+
+    window.clearSignature = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hidden.value = '';
+    };
+})();
+</script>
+{% endblock %}

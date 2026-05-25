@@ -1,0 +1,114 @@
+{% load finance_extras %}
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Tagihan SPP - {{ inv_number }}</title>
+<style>
+@page { size: A4 portrait; margin: 15mm 12mm 12mm 12mm; }
+body { font-family: 'DejaVu Sans', sans-serif; font-size: 9px; color: #2d3748; margin: 0; padding: 0; }
+.header { border-bottom: 2.5px solid #2b6cb0; padding-bottom: 8px; margin-bottom: 12px; }
+.header-table { width: 100%; border-collapse: collapse; }
+.header-table td { vertical-align: middle; padding: 0; }
+.logo-cell { width: 55px; }
+.logo-img { max-width: 45px; max-height: 45px; }
+.school-name { font-size: 20px; font-weight: 800; color: #1a365d; margin: 0; letter-spacing: 0.5px; }
+.school-sub { font-size: 8px; color: #4a5568; margin: 2px 0 0 0; }
+.school-contact { font-size: 7px; color: #718096; margin: 1px 0; }
+.title-wrap { text-align: center; margin: 8px 0 12px 0; }
+.title-wrap h1 { font-size: 16px; color: #2b6cb0; margin: 0; letter-spacing: 2px; font-weight: 800; }
+.title-wrap h2 { font-size: 9px; color: #718096; font-weight: normal; margin: 2px 0 0 0; }
+.main-row { width: 100%; }
+.main-row td { vertical-align: top; }
+.info-col { width: 65%; }
+.qr-col { width: 35%; text-align: center; }
+.info-wrap { margin: 0; }
+.info-row { margin: 3px 0; }
+.info-label { font-weight: 600; color: #4a5568; font-size: 8px; }
+.detail-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+.detail-table th { background: #2b6cb0; color: #fff; padding: 5px 8px; text-align: left; font-size: 8px; letter-spacing: 0.5px; border: 1px solid #2b6cb0; }
+.detail-table td { padding: 5px 8px; border: 1px solid #cbd5e0; font-size: 9px; }
+.detail-table tr:nth-child(even) { background: #f7fafc; }
+.total-row td { font-size: 11px; font-weight: bold; color: #2b6cb0; background: #ebf4ff !important; }
+.status-box { text-align: center; margin: 6px 0; }
+.status-badge { display: inline-block; padding: 3px 16px; border-radius: 3px; font-size: 10px; font-weight: bold; letter-spacing: 1px; }
+.status-belum { background: #c53030; color: #fff; }
+.status-lunas { background: #276749; color: #fff; }
+.qr-img { width: 90px; height: 90px; }
+.verif-code { font-family: 'Courier New', monospace; font-size: 11px; font-weight: bold; color: #2b6cb0; letter-spacing: 2px; }
+.line-sep { border: none; border-top: 1.5px solid #e2e8f0; margin: 8px 0; }
+.legal { text-align: center; font-size: 7px; color: #a0aec0; line-height: 1.5; margin-top: 6px; }
+.footer { text-align: center; font-size: 7px; color: #a0aec0; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+<table class="header-table">
+<tr>
+    <td class="logo-cell" style="padding-right:8px;">
+        {% if school.logo %}<img src="{{ school.logo.url }}" class="logo-img" alt="Logo">{% endif %}
+    </td>
+    <td>
+        <p class="school-name">{{ school.name|default:"SEKOLAH" }}</p>
+        <p class="school-sub">{{ school.address|default:"" }}</p>
+        <p class="school-contact">
+            {% if school.website %}{{ school.website }} &middot; {% endif %}
+            {% if school.email %}{{ school.email }}{% endif %}
+            {% if school.phone %} &middot; {{ school.phone }}{% endif %}
+        </p>
+    </td>
+</tr>
+</table>
+</div>
+
+<div class="title-wrap">
+<h1>TAGIHAN SPP</h1>
+<h2>{{ bill.get_month_display }} {{ bill.year }}</h2>
+</div>
+
+<table class="main-row">
+<tr>
+<td class="info-col">
+<div class="info-wrap">
+    <div class="info-row"><span class="info-label">No. Tagihan:</span><br>{{ inv_number }}</div>
+    <div class="info-row"><span class="info-label">Kode Verifikasi:</span><br><span class="verif-code">{{ verify_code }}</span></div>
+    <div class="info-row"><span class="info-label">Siswa:</span><br>{{ bill.student.full_name }}</div>
+    <div class="info-row"><span class="info-label">NISN / NIS:</span><br>{{ bill.student.nisn }} / {{ bill.student.nis }}</div>
+    <div class="info-row"><span class="info-label">Kelas:</span><br>{{ bill.student.class_grade }}</div>
+    <div class="info-row"><span class="info-label">Virtual Account:</span><br><span style="font-family:'Courier New',monospace;letter-spacing:2px;font-size:10px;">{{ bill.virtual_account|default:"-" }}</span></div>
+    <div class="info-row"><span class="info-label">Status:</span><br><span style="background:{% if bill.is_paid %}#276749{% else %}#c53030{% endif %};color:#fff;padding:1px 8px;border-radius:3px;font-size:8px;">{% if bill.is_paid %}LUNAS{% else %}BELUM DIBAYAR{% endif %}</span></div>
+</div>
+</td>
+<td class="qr-col">
+{% if qr_b64 %}
+<img src="data:image/png;base64,{{ qr_b64 }}" class="qr-img" alt="QR">
+<p style="font-size:6.5px;color:#a0aec0;margin:4px 0 0 0;">Scan untuk verifikasi</p>
+{% endif %}
+</td>
+</tr>
+</table>
+
+<table class="detail-table">
+<tr><th style="width:65%;">Deskripsi</th><th style="width:35%;">Jumlah (Rp)</th></tr>
+<tr><td>SPP {{ bill.get_month_display }} {{ bill.year }} - {{ bill.student.class_grade.grade.name }}</td><td style="text-align:right;">{{ bill.amount|floatformat:0|default:"0" }}</td></tr>
+<tr class="total-row"><td><strong>Total</strong></td><td style="text-align:right;"><strong>{{ bill.amount|floatformat:0|default:"0" }}</strong></td></tr>
+</table>
+
+<div class="status-box">
+<span class="status-badge {% if bill.is_paid %}status-lunas{% else %}status-belum{% endif %}">
+    {% if bill.is_paid %}LUNAS{% else %}BELUM DIBAYAR{% endif %}
+</span>
+</div>
+
+<hr class="line-sep">
+
+<div class="legal">
+    <p><strong>Dokumen ini sah dan legal tanpa tanda tangan basah.</strong> Diterbitkan otomatis oleh sistem pembayaran {{ school.name }}. Kode verifikasi <strong>{{ verify_code }}</strong> dapat diverifikasi di portal sekolah. Hubungi Tata Usaha jika terdapat ketidaksesuaian.</p>
+</div>
+
+<div class="footer">
+<p>Diunduh oleh: {{ downloaded_by|mask }} pada {{ downloaded_at }}</p>
+<p>Informasi ini bersifat informatif. Jika terdapat perbedaan, mohon merujuk pada portal resmi {{ school.name|default:'Sekolah' }}.</p>
+</div>
+
+</body>
+</html>

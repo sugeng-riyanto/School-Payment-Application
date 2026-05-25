@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Pembayaran ECA{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Pembayaran ECA</h1>
+    </div>
+
+    <div class="mb-4 flex gap-2">
+        <a href="?filter=all" class="px-4 py-2 rounded-lg text-sm {% if filter == 'all' %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">Semua</a>
+        <a href="?filter=unpaid" class="px-4 py-2 rounded-lg text-sm {% if filter == 'unpaid' %}bg-yellow-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">Belum Bayar</a>
+        <a href="?filter=paid" class="px-4 py-2 rounded-lg text-sm {% if filter == 'paid' %}bg-green-600 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">Sudah Bayar</a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left p-3">Siswa</th>
+                    <th class="text-left p-3">Program</th>
+                    <th class="text-left p-3">Tagihan</th>
+                    <th class="text-left p-3">Dibayar</th>
+                    <th class="text-left p-3">Status</th>
+                    <th class="text-left p-3">Tgl</th>
+                    <th class="text-left p-3">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="p-3">{{ p.registration.student.full_name }}</td>
+                    <td class="p-3">{{ p.registration.program.name }}</td>
+                    <td class="p-3">Rp{{ p.amount|floatformat:0 }}</td>
+                    <td class="p-3">Rp{{ p.paid_amount|floatformat:0 }}</td>
+                    <td class="p-3">
+                        {% if p.payment_status == 'approved' %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Diterima</span>
+                        {% elif p.payment_status == 'rejected' %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Ditolak</span>
+                        {% elif p.payment_status == 'revised' %}
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Revisi</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-3 text-sm">{{ p.created_at|date:"d/m/Y"|default:"-" }}</td>
+                    <td class="p-3">
+                        <a href="{% url 'eca:eca_payment_review' p.id %}" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700"><i class="fas fa-search mr-1"></i>Review</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada data pembayaran</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

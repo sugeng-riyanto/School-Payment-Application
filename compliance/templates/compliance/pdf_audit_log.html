@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>{{ title }}</title>
+<style>
+body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th { background: #2563eb; color: white; padding: 6px; text-align: left; font-size: 9px; }
+td { padding: 4px 6px; border-bottom: 1px solid #ddd; }
+h1 { font-size: 16px; color: #1e293b; }
+.footer { margin-top: 20px; font-size: 8px; color: #94a3b8; text-align: center; }
+</style>
+</head>
+<body>
+<h1>{{ title }}</h1>
+<p>Generated: {{ generated_at }}</p>
+<table>
+<thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>{% for v in row.values %}<td>{{ v }}</td>{% endfor %}</tr>
+{% empty %}
+<tr><td colspan="{{ headers|length }}" style="text-align:center;color:#94a3b8;">No data</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<div class="footer">This document is auto-generated from the Compliance Dashboard. Confidential.</div>
+</body>
+</html>

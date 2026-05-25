@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Pernyataan Kelulusan{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Pernyataan Kelulusan</h1>
+        <div class="flex gap-2">
+            <form method="post" onsubmit="return confirm('Luluskan semua siswa kelas akhir (6/9/12)?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="graduate_all">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"><i class="fas fa-graduation-cap mr-2"></i>Luluskan Semua</button>
+            </form>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <form method="post" id="graduateForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="graduate_selected">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-left"><input type="checkbox" id="selectAll"></th>
+                            <th class="p-3 text-left">NISN</th>
+                            <th class="p-3 text-left">Nama</th>
+                            <th class="p-3 text-left">Kelas</th>
+                            <th class="p-3 text-left">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr class="border-t hover:bg-gray-50">
+                            <td class="p-3"><input type="checkbox" name="student_ids" value="{{ s.nisn }}" class="student-check"></td>
+                            <td class="p-3">{{ s.nisn }}</td>
+                            <td class="p-3">{{ s.full_name }}{% if not s.is_active %} <span class="text-red-500 text-xs font-semibold">(LULUS)</span>{% endif %}</td>
+                            <td class="p-3">{{ s.class_grade }}</td>
+                            <td class="p-3">
+                                <button type="submit" onclick="document.getElementById('graduateForm').querySelector('input[name=student_ids]').value='{{ s.nisn }}'" class="text-blue-600 hover:underline text-sm">Luluskan</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="p-6 text-center text-gray-500">Tidak ada siswa kelas akhir (6/9/12) yang aktif.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t flex justify-end">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" onclick="return confirm('Luluskan siswa yang dipilih?')"><i class="fas fa-check mr-2"></i>Luluskan Terpilih</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.getElementById('selectAll')?.addEventListener('change', function() {
+    document.querySelectorAll('.student-check').forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Buat Kompensasi{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Buat Kompensasi Pembayaran</h1>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Siswa</label>
+                <select name="student" required class="w-full px-4 py-2 border rounded-lg">
+                    {% for s in students %}
+                    <option value="{{ s.nisn }}">{{ s.full_name }} ({{ s.nisn }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipe</label>
+                <select name="comp_type" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="spp">SPP</option>
+                    <option value="dpp">DPP</option>
+                    <option value="eca">ECA</option>
+                    <option value="kegiatan">Uang Kegiatan</option>
+                    <option value="other">Lainnya</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea name="description" rows="3" required class="w-full px-4 py-2 border rounded-lg"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Asli (Rp)</label>
+                <input type="number" name="original_amount" id="original_amount" required class="w-full px-4 py-2 border rounded-lg" oninput="calculate()">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Metode Potongan</label>
+                <select name="discount_method" id="discount_method" class="w-full px-4 py-2 border rounded-lg" onchange="calculate()">
+                    <option value="nominal">Nominal (Rp)</option>
+                    <option value="persen">Persen (%)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Kompensasi/Potongan</label>
+                <input type="number" name="comp_amount" id="comp_amount" required class="w-full px-4 py-2 border rounded-lg" oninput="calculate()">
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Hasil Akhir:</span>
+                    <span id="final_result" class="text-xl font-bold text-blue-600">Rp0</span>
+                </div>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-save mr-2"></i>Simpan
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function calculate() {
+    var orig = parseFloat(document.getElementById('original_amount').value) || 0;
+    var comp = parseFloat(document.getElementById('comp_amount').value) || 0;
+    var method = document.getElementById('discount_method').value;
+    var final = method === 'persen' ? orig - (orig * comp / 100) : orig - comp;
+    document.getElementById('final_result').textContent = 'Rp' + Math.round(final).toLocaleString('id-ID');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Diskon Pembayaran{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Diskon Pembayaran</h1>
+    <a href="{% url 'finance:create_discount' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><i class="fas fa-plus mr-1"></i>Buat Diskon</a>
+</div>
+<div class="bg-white rounded-lg shadow overflow-x-auto">
+    <table class="w-full text-left">
+        <thead><tr class="bg-gray-100"><th class="p-3">Siswa</th><th class="p-3">Tipe</th><th class="p-3">Jumlah</th><th class="p-3">Status</th><th class="p-3">Berlaku Sampai</th><th class="p-3">Dibuat Oleh</th></tr></thead>
+        <tbody>
+            {% for d in discounts %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="p-3">{{ d.student.full_name }}</td>
+                <td class="p-3">{{ d.get_discount_type_display }}</td>
+                <td class="p-3">Rp {{ d.amount|floatformat:0 }}</td>
+                <td class="p-3">{% if d.is_active %}<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Aktif</span>{% else %}<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Nonaktif</span>{% endif %}</td>
+                <td class="p-3">{{ d.valid_until|date:"d/m/Y"|default:"-" }}</td>
+                <td class="p-3">{{ d.created_by.get_full_name|default:d.created_by.username }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada diskon.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

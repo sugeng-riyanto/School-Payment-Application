@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Pembayaran ECA{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white p-8 rounded-xl shadow-md">
+        <h1 class="text-2xl font-bold mb-6">Pembayaran ECA</h1>
+        <div class="space-y-4 mb-6">
+            <div class="flex justify-between p-4 bg-gray-50 rounded-lg">
+                <span class="font-medium">Order ID</span>
+                <span class="font-mono text-sm">{{ transaction.midtrans_order_id }}</span>
+            </div>
+            <div class="flex justify-between p-4 bg-blue-50 rounded-lg text-lg font-bold">
+                <span>Total Pembayaran</span>
+                <span class="text-blue-600">Rp{{ transaction.amount|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <div class="text-center space-y-4">
+            <button id="pay-button" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium text-lg">
+                <i class="fas fa-credit-card mr-2"></i>Bayar Sekarang Rp{{ transaction.amount|floatformat:0 }}
+            </button>
+            <p class="text-sm text-gray-500">Klik tombol di atas untuk membuka popup pembayaran Midtrans.</p>
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="{% url 'eca:registration_list' %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-1"></i>Kembali ke Daftar ECA
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
+<script>
+document.getElementById('pay-button').onclick = function() {
+    {% if transaction.snap_token %}
+    snap.pay('{{ transaction.snap_token }}', {
+        onSuccess: function(result) {
+            window.location.href = '{% url "eca:registration_list" %}?paid=1';
+        },
+        onPending: function(result) {
+            window.location.href = '{% url "eca:registration_list" %}?pending=1';
+        },
+        onError: function(result) {
+            alert('Pembayaran gagal: ' + result.status_message);
+        },
+        onClose: function() {
+            window.location.href = '{% url "eca:registration_list" %}';
+        }
+    });
+    {% endif %}
+    return false;
+};
+</script>
+{% endblock %}
