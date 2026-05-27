@@ -15,16 +15,30 @@ from payments.models import MidtransConfig, PaymentTransaction, BlastEmailTempla
 
 today = date.today()
 
+PASS = 'admin123'
+
 # ============================================================
-# 1. GET OR CREATE BASE DATA
+# 1. ACADEMIC YEAR
 # ============================================================
-ay = AcademicYear.objects.get(name='2025/2026')
-grades = {g.level: g for g in Grade.objects.all()}
-print(f'Academic year: {ay.name}')
+ay, _ = AcademicYear.objects.get_or_create(
+    name='2025/2026',
+    defaults={'is_active': True, 'start_date': date(2025, 7, 1), 'end_date': date(2026, 6, 30)}
+)
+if not ay.is_active:
+    ay.is_active = True
+    ay.save()
+
+# ============================================================
+# 2. GRADES
+# ============================================================
+grades = {}
+for level, name in [('sd', 'SD'), ('smp', 'SMP'), ('sma', 'SMA')]:
+    g, _ = Grade.objects.get_or_create(level=level, defaults={'name': name})
+    grades[level] = g
 print(f'Grades: {[(g.name, g.level) for g in grades.values()]}')
 
 # ============================================================
-# 2. CLASSGRADES
+# 3. CLASSGRADES
 # ============================================================
 class_data = {
     'sd': ['Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD'],
@@ -36,20 +50,37 @@ for level, class_names in class_data.items():
     for name in class_names:
         cg, _ = ClassGrade.objects.get_or_create(name=name, grade=grades[level], academic_year=ay)
         created_classes.append(cg)
-print(f'ClassGrades: {len(created_classes)} created')
+print(f'ClassGrades: {len(created_classes)}')
 
 # ============================================================
-# 3. GET USERS
+# 4. USERS (create if not exist on SQLite)
 # ============================================================
-parent = User.objects.get(email='srphysics04@gmail.com')
-admin_user = User.objects.get(email='sugeng.riyanto@shb.sch.id')
-tu_user = User.objects.get(email='tu@shb.sch.id')
-kepsek_user = User.objects.get(email='shsmodernhill@shb.sch.id')
-eca_user = User.objects.get(email='eca@shb.sch.id')
-vp_user = User.objects.get(email='aqeelainstruments@gmail.com')
-pic_user = User.objects.get(email='pic@shb.sch.id')
+def _make_user(email, role, level, first, last):
+    u, created = User.objects.get_or_create(
+        email=email,
+        defaults={
+            'username': email.split('@')[0],
+            'role': role, 'assigned_level': level,
+            'first_name': first, 'last_name': last,
+            'phone': '081234567890', 'show_phone': True,
+            'alamat': 'Alamat Demo',
+        }
+    )
+    if created:
+        u.set_password(PASS)
+        u.save()
+    return u, created
 
-print(f'Users ready: parent={parent}, admin={admin_user}')
+admin_user, _    = _make_user('sugeng.riyanto@shb.sch.id', 'admin', '', 'Sugeng', 'Riyanto')
+_make_user('admin@school.com', 'admin', '', 'Admin', 'Cadangan')
+parent, _       = _make_user('srphysics04@gmail.com', 'parent', '', 'Orang Tua', 'Demo')
+vp_user, _      = _make_user('aqeelainstruments@gmail.com', 'vp_activity', 'sd', 'VP', 'Activity')
+kepsek_user, _  = _make_user('shsmodernhill@shb.sch.id', 'kepsek', 'sd', 'Kepsek', 'SHB')
+tu_user, _      = _make_user('tu@shb.sch.id', 'tu', 'sd_smp_sma', 'TU', 'SHB')
+eca_user, _     = _make_user('eca@shb.sch.id', 'eca_director', 'sd', 'ECA', 'Director')
+pic_user, _     = _make_user('pic@shb.sch.id', 'pic_teacher', 'sd', 'PIC', 'Teacher')
+
+print(f'Users ready (password {PASS})')
 
 # ============================================================
 # 4. STUDENTS (3 children for parent)
