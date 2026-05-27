@@ -8,9 +8,7 @@
         <div class="grid md:grid-cols-2 gap-12 items-center">
             <div>
                 <div class="flex items-center gap-3 mb-4">
-                    {% if school.logo %}
-                    <img src="{{ school.logo.url }}" alt="{{ school.name }}" class="h-16 w-16 rounded-full border-2 border-white/30 shadow-lg">
-                    {% endif %}
+                    <img src="{{ school.get_logo_url }}" alt="{{ school.name }}" class="h-16 w-16 rounded-full border-2 border-white/30 shadow-lg">
                     <div>
                         <h1 class="text-4xl md:text-5xl font-bold">{{ school.name|default:'Sekolah' }}</h1>
                         <p class="text-blue-200 text-lg mt-1">Portal Informasi Akademik</p>

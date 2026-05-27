@@ -42,7 +42,7 @@ body { font-family: 'DejaVu Sans', sans-serif; font-size: 9px; color: #2d3748; m
 <table class="header-table">
 <tr>
     <td class="logo-cell" style="padding-right:8px;">
-        {% if school.logo %}<img src="{{ school.logo.url }}" class="logo-img" alt="Logo">{% endif %}
+        <img src="{{ school.get_logo_url }}" class="logo-img" alt="Logo">
     </td>
     <td>
         <p class="school-name">{{ school.name|default:"SEKOLAH" }}</p>

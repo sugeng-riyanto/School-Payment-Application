@@ -5,7 +5,7 @@
 <div class="hero-gradient text-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="flex items-center gap-4">
-            {% if school.logo %}<img src="{{ school.logo.url }}" class="h-16 w-16 rounded-full border-2 border-white/30">{% endif %}
+            <img src="{{ school.get_logo_url }}" class="h-16 w-16 rounded-full border-2 border-white/30">
             <div>
                 <h1 class="text-3xl font-bold">Profil {{ school.name }}</h1>
                 <p class="text-blue-200">Informasi lengkap identitas sekolah</p>
@@ -30,11 +30,9 @@
                 <div class="mt-4 inline-block bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium">{{ school.accreditation }}</div>
                 {% endif %}
             </div>
-            {% if school.logo %}
             <div class="flex justify-center items-center">
-                <img src="{{ school.logo.url }}" class="h-36 w-36 rounded-2xl shadow-lg object-cover">
+                <img src="{{ school.get_logo_url }}" class="h-36 w-36 rounded-2xl shadow-lg object-cover">
             </div>
-            {% endif %}
         </div>
     </div>
 

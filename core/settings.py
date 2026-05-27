@@ -164,7 +164,7 @@ LOCALE_PATHS = [
 # Language cookie name
 LANGUAGE_COOKIE_NAME = 'django_language'
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

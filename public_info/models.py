@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.core.files import File
 
 
 class SchoolProfile(models.Model):
@@ -22,9 +24,19 @@ class SchoolProfile(models.Model):
     def __str__(self):
         return self.name
 
+    def get_logo_url(self):
+        if self.logo and self.logo.storage.exists(self.logo.name):
+            return self.logo.url
+        return settings.STATIC_URL + 'img/logo_shb.png'
+
     @classmethod
     def get_profile(cls):
-        obj, _ = cls.objects.get_or_create(id=1, defaults={'name': 'Sekolah', 'address': '-', 'phone': '-', 'email': '-', 'vision': '-', 'mission': '-'})
+        obj, created = cls.objects.get_or_create(id=1, defaults={'name': 'Sekolah', 'address': '-', 'phone': '-', 'email': '-', 'vision': '-', 'mission': '-'})
+        if created or not obj.logo or not obj.logo.storage.exists(obj.logo.name):
+            default_path = settings.BASE_DIR / 'static' / 'img' / 'logo_shb.png'
+            if default_path.exists():
+                with open(str(default_path), 'rb') as f:
+                    obj.logo.save('logo_default.png', File(f), save=True)
         return obj
 
 
