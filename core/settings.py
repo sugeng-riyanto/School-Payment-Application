@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import socket
 from decouple import config
 from django.utils.translation import gettext_lazy as _
 
@@ -127,16 +128,38 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default=''),
-        'PORT': config('DB_PORT', default=''),
+def _detect_db():
+    host = config('DB_HOST', default='')
+    port = int(config('DB_PORT', default=5432))
+    if host:
+        try:
+            addrs = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)
+            for addr in addrs:
+                s = socket.socket(addr[0], socket.SOCK_STREAM)
+                s.settimeout(2)
+                try:
+                    s.connect(addr[4])
+                    s.close()
+                    ip = addr[4][0]
+                    return {
+                        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                        'NAME': config('DB_NAME', default='postgres'),
+                        'USER': config('DB_USER', default='postgres'),
+                        'PASSWORD': config('DB_PASSWORD', default=''),
+                        'HOST': ip,
+                        'PORT': port,
+                    }
+                except Exception:
+                    s.close()
+                    continue
+        except Exception:
+            pass
+    return {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+
+DATABASES = {'default': _detect_db()}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
