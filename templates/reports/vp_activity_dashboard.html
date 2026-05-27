@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard VP Activity{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Dashboard VP Activity</h1>
+<div class="max-w-7xl mx-auto px-2 sm:px-0">
+    <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Dashboard VP Activity</h1>
 
     {% if pending_reviews %}
-    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-lg">
-        <p class="font-semibold text-yellow-800"><i class="fas fa-clipboard-check mr-1"></i>{{ pending_reviews|length }} Laporan menunggu review</p>
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg">
+        <p class="font-semibold text-yellow-800 text-sm sm:text-base"><i class="fas fa-clipboard-check mr-1"></i>{{ pending_reviews|length }} Laporan menunggu review</p>
         <div class="mt-2 space-y-1">
             {% for act in pending_reviews %}
-            <a href="{% url 'activities:review' act.slug %}" class="block text-yellow-700 hover:text-yellow-900 text-sm">
+            <a href="{% url 'activities:review' act.slug %}" class="block text-yellow-700 hover:text-yellow-900 text-xs sm:text-sm">
                 <i class="fas fa-arrow-right mr-1"></i>{{ act.title }} ({{ act.get_status_display }})
             </a>
             {% endfor %}
@@ -17,38 +17,38 @@
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-clipboard-list text-3xl text-blue-500 mb-2"></i>
-            <div class="text-2xl font-bold">{{ total_activities|default:"0" }}</div>
-            <div class="text-gray-500">Laporan Kegiatan</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-clipboard-list text-2xl sm:text-3xl text-blue-500 mb-1 sm:mb-2"></i>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_activities|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Laporan Kegiatan</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-running text-3xl text-green-500 mb-2"></i>
-            <div class="text-2xl font-bold">{{ total_eca|default:"0" }}</div>
-            <div class="text-gray-500">Program ECA Aktif</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-running text-2xl sm:text-3xl text-green-500 mb-1 sm:mb-2"></i>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_eca|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Program ECA Aktif</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-users text-3xl text-purple-500 mb-2"></i>
-            <div class="text-2xl font-bold">{{ total_participants|default:"0" }}</div>
-            <div class="text-gray-500">Peserta Kegiatan</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-users text-2xl sm:text-3xl text-purple-500 mb-1 sm:mb-2"></i>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_participants|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Peserta Kegiatan</div>
         </div>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4">Distribusi ECA</h2>
-            <canvas id="ecaDist" height="200"></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Distribusi ECA</h2>
+            <div class="relative w-full" style="max-width:100%"><canvas id="ecaDist" class="w-full"></canvas></div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4">Aktivitas Terbaru</h2>
-            <div class="space-y-3">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Aktivitas Terbaru</h2>
+            <div class="space-y-2 sm:space-y-3">
                 {% for activity in recent_activities %}
-                <a href="{% url 'activities:detail' activity.slug %}" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
-                    <p class="font-medium">{{ activity.title }}</p>
-                    <p class="text-sm text-gray-500">{{ activity.start_date|date:"d M Y" }}</p>
+                <a href="{% url 'activities:detail' activity.slug %}" class="block p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                    <p class="font-medium text-sm sm:text-base">{{ activity.title }}</p>
+                    <p class="text-xs sm:text-sm text-gray-500">{{ activity.start_date|date:"d M Y" }}</p>
                 </a>
                 {% empty %}
-                <p class="text-gray-500">Belum ada aktivitas</p>
+                <p class="text-gray-500 text-sm">Belum ada aktivitas</p>
                 {% endfor %}
             </div>
         </div>

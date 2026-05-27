@@ -1,11 +1,13 @@
+{% load i18n_extra %}
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ school.name|default:'Sekolah' }}{% endblock %}</title>
+    <title>{% block title %}{% t "Home" %} - {{ school.name|default:'School' }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
     {% if school.logo %}<link rel="icon" type="image/png" href="{{ school.logo.url }}">{% endif %}
     <style>
         body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; scroll-behavior: smooth; }
@@ -28,18 +30,42 @@
                     {% else %}
                     <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg font-bold">S</div>
                     {% endif %}
-                    <span class="hidden sm:inline">{{ school.name|default:'Sekolah' }}</span>
+                    <span class="hidden sm:inline">{{ school.name|default:'School' }}</span>
                 </a>
                 <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-                    <a href="{% url 'public_info:school_profile' %}" class="nav-link">Profil</a>
-                    <a href="{% url 'public_info:curriculum' %}" class="nav-link">Kurikulum</a>
-                    <a href="{% url 'public_info:teachers' %}" class="nav-link">Guru</a>
-                    <a href="{% url 'public_info:grading' %}" class="nav-link">Penilaian</a>
-                    <a href="{% url 'public_info:calendar' %}" class="nav-link">Kalender</a>
+                    <a href="{% url 'public_info:school_profile' %}" class="nav-link">{% t "School Profile" %}</a>
+                    <a href="{% url 'public_info:curriculum' %}" class="nav-link">{% t "Curriculum" %}</a>
+                    <a href="{% url 'public_info:teachers' %}" class="nav-link">{% t "Teachers" %}</a>
+                    <a href="{% url 'public_info:grading' %}" class="nav-link">{% t "Grading" %}</a>
+                    <a href="{% url 'public_info:calendar' %}" class="nav-link">{% t "Calendar" %}</a>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    {% lang_code as LC %}
+                    <div class="relative" id="langDropdown">
+                        <button onclick="document.getElementById('langMenu').classList.toggle('hidden')" class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition">
+                            {% if LC == 'id' %}<span class="fi fi-id fis rounded-sm shadow-sm"></span>
+                            {% elif LC == 'zh-hans' %}<span class="fi fi-cn fis rounded-sm shadow-sm"></span>
+                            {% else %}<span class="fi fi-us fis rounded-sm shadow-sm"></span>{% endif %}
+                            <span class="hidden sm:inline">{% lang_name %}</span>
+                            <i class="fas fa-chevron-down text-xs ml-0.5"></i>
+                        </button>
+                        <div id="langMenu" class="hidden absolute right-0 mt-1 bg-white border rounded-lg shadow-lg py-1 w-44 z-50">
+                            <a href="{% url 'public_info:set_language' %}?lang=en&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if LC == 'en' %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <span class="fi fi-us fis rounded-sm shadow-sm"></span>English
+                            </a>
+                            <a href="{% url 'public_info:set_language' %}?lang=id&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if LC == 'id' %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <span class="fi fi-id fis rounded-sm shadow-sm"></span>Indonesia
+                            </a>
+                            <a href="{% url 'public_info:set_language' %}?lang=zh-hans&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if LC == 'zh-hans' %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <span class="fi fi-cn fis rounded-sm shadow-sm"></span>简体中文
+                            </a>
+                        </div>
+                    </div>
+                    <a href="{% url 'public_info:demo_login' %}" class="text-green-600 border border-green-500 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition">
+                        <i class="fas fa-play mr-1"></i>{% t "Demo" %}
+                    </a>
                     <a href="{% url 'accounts:login' %}" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
-                        <i class="fas fa-sign-in-alt mr-1"></i>Login
+                        <i class="fas fa-sign-in-alt mr-1"></i>{% t "Login" %}
                     </a>
                     <button id="mobile-menu-btn" class="md:hidden text-gray-600 text-xl" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
                         <i class="fas fa-bars"></i>
@@ -48,11 +74,11 @@
             </div>
             <!-- Mobile menu -->
             <div id="mobile-menu" class="hidden md:hidden pb-4 space-y-2 text-sm font-medium text-gray-600">
-                <a href="{% url 'public_info:school_profile' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">Profil</a>
-                <a href="{% url 'public_info:curriculum' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">Kurikulum</a>
-                <a href="{% url 'public_info:teachers' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">Guru</a>
-                <a href="{% url 'public_info:grading' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">Penilaian</a>
-                <a href="{% url 'public_info:calendar' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">Kalender</a>
+                <a href="{% url 'public_info:school_profile' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">{% t "School Profile" %}</a>
+                <a href="{% url 'public_info:curriculum' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">{% t "Curriculum" %}</a>
+                <a href="{% url 'public_info:teachers' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">{% t "Teachers" %}</a>
+                <a href="{% url 'public_info:grading' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">{% t "Grading" %}</a>
+                <a href="{% url 'public_info:calendar' %}" class="block px-3 py-2 rounded-lg hover:bg-blue-50">{% t "Calendar" %}</a>
             </div>
         </div>
     </nav>
@@ -77,35 +103,35 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid md:grid-cols-3 gap-8">
                 <div>
-                    <h4 class="text-white font-semibold mb-3">{{ school.name|default:'Sekolah' }}</h4>
+                    <h4 class="text-white font-semibold mb-3">{{ school.name|default:'School' }}</h4>
                     <p class="text-sm">{{ school.address|default:'' }}</p>
                     <p class="text-sm mt-2">{{ school.phone|default:'' }}</p>
                     <p class="text-sm">{{ school.email|default:'' }}</p>
                 </div>
                 <div>
-                    <h4 class="text-white font-semibold mb-3">Navigasi</h4>
+                    <h4 class="text-white font-semibold mb-3">{% t "Menu" %}</h4>
                     <div class="space-y-2 text-sm">
-                        <a href="{% url 'public_info:school_profile' %}" class="block hover:text-white">Profil Sekolah</a>
-                        <a href="{% url 'public_info:curriculum' %}" class="block hover:text-white">Kurikulum</a>
-                        <a href="{% url 'public_info:teachers' %}" class="block hover:text-white">Guru</a>
-                        <a href="{% url 'public_info:calendar' %}" class="block hover:text-white">Kalender Akademik</a>
+                        <a href="{% url 'public_info:school_profile' %}" class="block hover:text-white">{% t "School Profile" %}</a>
+                        <a href="{% url 'public_info:curriculum' %}" class="block hover:text-white">{% t "Curriculum" %}</a>
+                        <a href="{% url 'public_info:teachers' %}" class="block hover:text-white">{% t "Teachers" %}</a>
+                        <a href="{% url 'public_info:calendar' %}" class="block hover:text-white">{% t "Calendar" %}</a>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-white font-semibold mb-3">Ikuti Kami</h4>
+                    <h4 class="text-white font-semibold mb-3">{% t "Contact" %}</h4>
                     <div class="flex gap-3">
                         {% for s in school.social_media.all %}
                         <a href="{{ s.url }}" target="_blank" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition text-lg">
                             {% if s.icon %}<i class="{{ s.icon }}"></i>{% else %}<i class="fas fa-share-alt"></i>{% endif %}
                         </a>
                         {% empty %}
-                        <p class="text-sm text-gray-500">Belum tersedia</p>
+                        <p class="text-sm text-gray-500">{% t "Not available" %}</p>
                         {% endfor %}
                     </div>
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-                <p>&copy; {% now "Y" %} {{ school.name|default:'Sekolah' }}. All rights reserved.</p>
+                <p>&copy; {% now "Y" %} {{ school.name|default:'School' }}. {% t "All rights reserved" %}.</p>
             </div>
         </div>
     </footer>

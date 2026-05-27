@@ -1,0 +1,71 @@
+{% extends 'base_public.html' %}
+{% load i18n_extra %}
+{% block title %}{% t "Demo" %} - {{ school.name|default:'School' }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4">
+    <div class="text-center mb-10">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-flask text-3xl text-green-600"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800">{% t "Demo" %} {% t "Mode" %}</h1>
+        <p class="text-gray-500 mt-2 max-w-lg mx-auto">{% t "Try the app without creating an account" %}. {% t "Select a role to try available features" %}. {% t "All changes will be deleted on logout" %}.</p>
+    </div>
+
+    <form method="post" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% csrf_token %}
+
+        <button name="role" value="parent" class="bg-white p-6 rounded-xl shadow-md border-2 border-transparent hover:border-green-400 hover:shadow-lg transition-all text-left card-hover">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                <i class="fas fa-user-friends text-xl text-blue-600"></i>
+            </div>
+            <h3 class="font-bold text-gray-800">Parent</h3>
+            <p class="text-sm text-gray-500 mt-1">{% t "View bills, upload proof, register ECA, download invoice" %}</p>
+        </button>
+
+        <button name="role" value="tu" class="bg-white p-6 rounded-xl shadow-md border-2 border-transparent hover:border-green-400 hover:shadow-lg transition-all text-left card-hover">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                <i class="fas fa-calculator text-xl text-purple-600"></i>
+            </div>
+            <h3 class="font-bold text-gray-800">Tata Usaha</h3>
+            <p class="text-sm text-gray-500 mt-1">{% t "Confirm payments, manage bills, verify ECA & Cambridge" %}</p>
+        </button>
+
+        <button name="role" value="kepsek" class="bg-white p-6 rounded-xl shadow-md border-2 border-transparent hover:border-green-400 hover:shadow-lg transition-all text-left card-hover">
+            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-3">
+                <i class="fas fa-user-tie text-xl text-amber-600"></i>
+            </div>
+            <h3 class="font-bold text-gray-800">Kepala Sekolah</h3>
+            <p class="text-sm text-gray-500 mt-1">{% t "Approve bank accounts, review activity reports, compliance dashboard" %}</p>
+        </button>
+
+        <button name="role" value="eca_director" class="bg-white p-6 rounded-xl shadow-md border-2 border-transparent hover:border-green-400 hover:shadow-lg transition-all text-left card-hover">
+            <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-3">
+                <i class="fas fa-palette text-xl text-pink-600"></i>
+            </div>
+            <h3 class="font-bold text-gray-800">ECA Director</h3>
+            <p class="text-sm text-gray-500 mt-1">{% t "Manage ECA programs, verify registrations, input scores, reports" %}</p>
+        </button>
+
+        <button name="role" value="vp_activity" class="bg-white p-6 rounded-xl shadow-md border-2 border-transparent hover:border-green-400 hover:shadow-lg transition-all text-left card-hover">
+            <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-3">
+                <i class="fas fa-chart-line text-xl text-teal-600"></i>
+            </div>
+            <h3 class="font-bold text-gray-800">VP Activity</h3>
+            <p class="text-sm text-gray-500 mt-1">{% t "Review activity reports, view financial recap & ECA reports" %}</p>
+        </button>
+
+        <button name="role" value="pic_teacher" class="bg-white p-6 rounded-xl shadow-md border-2 border-transparent hover:border-green-400 hover:shadow-lg transition-all text-left card-hover">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3">
+                <i class="fas fa-chalkboard-teacher text-xl text-orange-600"></i>
+            </div>
+            <h3 class="font-bold text-gray-800">PIC Teacher</h3>
+            <p class="text-sm text-gray-500 mt-1">{% t "Create & submit activity reports, upload evidence, PIC review" %}</p>
+        </button>
+
+    </form>
+
+    <div class="mt-8 text-center">
+        <p class="text-sm text-gray-400"><i class="fas fa-info-circle mr-1"></i>{% t "Demo data will be restored to original after logout" %}.</p>
+    </div>
+</div>
+{% endblock %}

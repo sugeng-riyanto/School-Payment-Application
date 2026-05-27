@@ -1,88 +1,92 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard PIC Teacher{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Dashboard PIC Teacher</h1>
+<div class="max-w-7xl mx-auto px-2 sm:px-0">
+    <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Dashboard PIC Teacher</h1>
 
     {% if feedback_alerts %}
-    <div class="space-y-2 mb-6">
+    <div class="space-y-2 sm:space-y-2 mb-4 sm:mb-6">
         {% for fb in feedback_alerts %}
-        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg flex items-start justify-between">
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-lg flex flex-col sm:flex-row items-start gap-2 sm:gap-0 justify-between">
             <div>
-                <p class="font-semibold text-blue-800"><i class="fas fa-comment mr-1"></i>Feedback dari {{ fb.feedback_by.get_full_name|default:fb.feedback_by.username }}</p>
-                <p class="text-blue-700 text-sm mt-1">{{ fb.title }}: {{ fb.feedback_notes }}</p>
+                <p class="font-semibold text-blue-800 text-sm sm:text-base"><i class="fas fa-comment mr-1"></i>Feedback dari {{ fb.feedback_by.get_full_name|default:fb.feedback_by.username }}</p>
+                <p class="text-blue-700 text-xs sm:text-sm mt-1">{{ fb.title }}: {{ fb.feedback_notes }}</p>
             </div>
-            <a href="{% url 'activities:detail' fb.slug %}" class="text-blue-600 hover:underline text-sm whitespace-nowrap ml-2">Lihat <i class="fas fa-arrow-right ml-1"></i></a>
+            <a href="{% url 'activities:detail' fb.slug %}" class="text-blue-600 hover:underline text-xs sm:text-sm whitespace-nowrap">Lihat <i class="fas fa-arrow-right ml-1"></i></a>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-clipboard-list text-3xl text-blue-500 mb-2"></i>
-            <div class="text-2xl font-bold">{{ my_activities|default:"0" }}</div>
-            <div class="text-gray-500">Laporan Saya</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-clipboard-list text-2xl sm:text-3xl text-blue-500 mb-1 sm:mb-2"></i>
+            <div class="text-xl sm:text-2xl font-bold">{{ my_activities|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Laporan Saya</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-dollar-sign text-3xl text-green-500 mb-2"></i>
-            <div class="text-2xl font-bold">Rp{{ total_income|default:"0"|floatformat:0 }}</div>
-            <div class="text-gray-500">Total Pemasukan</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-dollar-sign text-2xl sm:text-3xl text-green-500 mb-1 sm:mb-2"></i>
+            <div class="text-lg sm:text-2xl font-bold truncate">Rp{{ total_income|default:"0"|floatformat:0 }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Total Pemasukan</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-file-image text-3xl text-purple-500 mb-2"></i>
-            <div class="text-2xl font-bold">{{ total_evidences|default:"0" }}</div>
-            <div class="text-gray-500">Bukti Laporan</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-file-image text-2xl sm:text-3xl text-purple-500 mb-1 sm:mb-2"></i>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_evidences|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Bukti Laporan</div>
         </div>
     </div>
-    <div class="bg-white p-6 rounded-xl shadow-md">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold">Laporan Kegiatan Saya</h2>
-            <a href="{% url 'activities:create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+    <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-3 sm:mb-4">
+            <h2 class="text-base sm:text-lg font-semibold">Laporan Kegiatan Saya</h2>
+            <a href="{% url 'activities:create' %}" class="bg-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 text-xs sm:text-sm">
                 <i class="fas fa-plus mr-1"></i>Buat Laporan
             </a>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead><tr class="border-b"><th class="text-left p-3">Judul</th><th class="text-left p-3">Tanggal</th><th class="text-left p-3">Status</th><th class="text-left p-3">Aksi</th></tr></thead>
-                <tbody>
-                    {% for activity in activities %}
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3">{{ activity.title }}{% if activity.feedback_notes %} <i class="fas fa-comment-dots text-blue-500" title="Ada feedback"></i>{% endif %}</td>
-                        <td class="p-3">{{ activity.start_date|date:"d M Y" }}</td>
-                        <td class="p-3">
-                            {% if activity.status == 'approved' %}
-                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Disetujui</span>
-                            {% elif activity.status == 'pic_approved' %}
-                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Disetujui PIC</span>
-                            {% elif activity.status == 'submitted' %}
-                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Diajukan</span>
-                            {% elif activity.status == 'revised' %}
-                            <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Revisi</span>
-                            {% elif activity.status == 'rejected' %}
-                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Ditolak</span>
-                            {% else %}
-                            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Draft</span>
-                            {% endif %}
-                        </td>
-                        <td class="p-3">
-                            <a href="{% url 'activities:detail' activity.slug %}" class="text-blue-600 hover:text-blue-800 text-sm mr-2"><i class="fas fa-eye"></i></a>
-                            {% if activity.status != 'approved' and activity.status != 'rejected' %}
-                            <a href="{% url 'activities:edit' activity.slug %}" class="text-indigo-600 hover:text-indigo-800 text-sm mr-2"><i class="fas fa-edit"></i></a>
-                            {% endif %}
-                            {% if activity.status == 'draft' or activity.status == 'revised' %}
-                            <a href="{% url 'activities:publish' activity.slug %}" class="text-green-600 hover:text-green-800 text-sm"><i class="fas fa-upload"></i></a>
-                            {% endif %}
-                            {% if activity.status == 'submitted' %}
-                            <a href="{% url 'activities:pic_review' activity.slug %}" class="text-purple-600 hover:text-purple-800 text-sm"><i class="fas fa-check-double"></i></a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" class="p-3 text-center text-gray-500">Belum ada laporan</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <div class="inline-block min-w-full align-middle px-4 sm:px-0">
+                <table class="min-w-full">
+                    <thead><tr class="border-b"><th class="text-left p-2 sm:p-3 text-xs sm:text-sm whitespace-nowrap">Judul</th><th class="text-left p-2 sm:p-3 text-xs sm:text-sm whitespace-nowrap">Tanggal</th><th class="text-left p-2 sm:p-3 text-xs sm:text-sm whitespace-nowrap">Status</th><th class="text-left p-2 sm:p-3 text-xs sm:text-sm whitespace-nowrap">Aksi</th></tr></thead>
+                    <tbody>
+                        {% for activity in activities %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-2 sm:p-3 text-sm">{{ activity.title }}{% if activity.feedback_notes %} <i class="fas fa-comment-dots text-blue-500 text-xs" title="Ada feedback"></i>{% endif %}</td>
+                            <td class="p-2 sm:p-3 text-sm">{{ activity.start_date|date:"d M Y" }}</td>
+                            <td class="p-2 sm:p-3">
+                                {% if activity.status == 'approved' %}
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Disetujui</span>
+                                {% elif activity.status == 'pic_approved' %}
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Disetujui PIC</span>
+                                {% elif activity.status == 'submitted' %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Diajukan</span>
+                                {% elif activity.status == 'revised' %}
+                                <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Revisi</span>
+                                {% elif activity.status == 'rejected' %}
+                                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Ditolak</span>
+                                {% else %}
+                                <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-2 sm:p-3">
+                                <div class="flex flex-nowrap gap-1 sm:gap-2">
+                                    <a href="{% url 'activities:detail' activity.slug %}" class="text-blue-600 hover:text-blue-800 text-xs sm:text-sm" title="Detail"><i class="fas fa-eye"></i></a>
+                                    {% if activity.status != 'approved' and activity.status != 'rejected' %}
+                                    <a href="{% url 'activities:edit' activity.slug %}" class="text-indigo-600 hover:text-indigo-800 text-xs sm:text-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                                    {% endif %}
+                                    {% if activity.status == 'draft' or activity.status == 'revised' %}
+                                    <a href="{% url 'activities:publish' activity.slug %}" class="text-green-600 hover:text-green-800 text-xs sm:text-sm" title="Submit"><i class="fas fa-upload"></i></a>
+                                    {% endif %}
+                                    {% if activity.status == 'submitted' %}
+                                    <a href="{% url 'activities:pic_review' activity.slug %}" class="text-purple-600 hover:text-purple-800 text-xs sm:text-sm" title="Review"><i class="fas fa-check-double"></i></a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="p-3 text-center text-gray-500 text-sm">Belum ada laporan</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

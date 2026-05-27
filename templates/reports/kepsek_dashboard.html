@@ -1,42 +1,42 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard Kepala Sekolah{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Dashboard Kepala Sekolah</h1>
+<div class="max-w-7xl mx-auto px-2 sm:px-0">
+    <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Dashboard Kepala Sekolah</h1>
 
     {% if spp_reports_pending or dpp_reports_pending or eca_reports_pending %}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {% if spp_reports_pending %}<a href="{% url 'finance:spp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl hover:bg-yellow-100"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan SPP perlu review: <strong>{{ spp_reports_pending }}</strong></a>{% endif %}
-        {% if dpp_reports_pending %}<a href="{% url 'finance:dpp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl hover:bg-yellow-100"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan DPP perlu review: <strong>{{ dpp_reports_pending }}</strong></a>{% endif %}
-        {% if eca_reports_pending %}<a href="{% url 'eca:eca_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl hover:bg-yellow-100"><i class="fas fa-chart-pie text-yellow-600 mr-2"></i> Laporan ECA perlu review: <strong>{{ eca_reports_pending }}</strong></a>{% endif %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        {% if spp_reports_pending %}<a href="{% url 'finance:spp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl hover:bg-yellow-100 text-sm"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan SPP perlu review: <strong>{{ spp_reports_pending }}</strong></a>{% endif %}
+        {% if dpp_reports_pending %}<a href="{% url 'finance:dpp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl hover:bg-yellow-100 text-sm"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan DPP perlu review: <strong>{{ dpp_reports_pending }}</strong></a>{% endif %}
+        {% if eca_reports_pending %}<a href="{% url 'eca:eca_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl hover:bg-yellow-100 text-sm"><i class="fas fa-chart-pie text-yellow-600 mr-2"></i> Laporan ECA perlu review: <strong>{{ eca_reports_pending }}</strong></a>{% endif %}
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-money-bill-wave text-3xl text-green-500 mb-2"></i>
-            <div class="text-2xl font-bold">Rp{{ total_spp_income|default:"0"|floatformat:0 }}</div>
-            <div class="text-gray-500">Pemasukan SPP</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-money-bill-wave text-2xl sm:text-3xl text-green-500 mb-1 sm:mb-2"></i>
+            <div class="text-lg sm:text-2xl font-bold truncate">Rp{{ total_spp_income|default:"0"|floatformat:0 }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Pemasukan SPP</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-building text-3xl text-blue-500 mb-2"></i>
-            <div class="text-2xl font-bold">Rp{{ total_dpp_income|default:"0"|floatformat:0 }}</div>
-            <div class="text-gray-500">Pemasukan DPP</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-building text-2xl sm:text-3xl text-blue-500 mb-1 sm:mb-2"></i>
+            <div class="text-lg sm:text-2xl font-bold truncate">Rp{{ total_dpp_income|default:"0"|floatformat:0 }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Pemasukan DPP</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <i class="fas fa-running text-3xl text-purple-500 mb-2"></i>
-            <div class="text-2xl font-bold">{{ total_eca_participants|default:"0" }}</div>
-            <div class="text-gray-500">Peserta ECA</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <i class="fas fa-running text-2xl sm:text-3xl text-purple-500 mb-1 sm:mb-2"></i>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_eca_participants|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Peserta ECA</div>
         </div>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4">Rekap SPP per Bulan</h2>
-            <canvas id="sppTimeline" height="200"></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Rekap SPP per Bulan</h2>
+            <div class="relative w-full" style="max-width:100%"><canvas id="sppTimeline" class="w-full"></canvas></div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4">Distribusi ECA</h2>
-            <canvas id="ecaDistChart" height="200"></canvas>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Distribusi ECA</h2>
+            <div class="relative w-full" style="max-width:100%"><canvas id="ecaDistChart" class="w-full"></canvas></div>
         </div>
     </div>
 </div>

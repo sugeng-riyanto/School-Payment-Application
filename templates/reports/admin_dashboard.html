@@ -1,64 +1,64 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard Admin{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Dashboard Admin</h1>
+<div class="max-w-7xl mx-auto px-2 sm:px-0">
+    <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Dashboard Admin</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <div class="text-blue-500 text-3xl mb-2"><i class="fas fa-users"></i></div>
-            <div class="text-2xl font-bold">{{ total_users|default:"0" }}</div>
-            <div class="text-gray-500">Total Pengguna</div>
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <div class="text-blue-500 text-2xl sm:text-3xl mb-1 sm:mb-2"><i class="fas fa-users"></i></div>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_users|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Total Pengguna</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <div class="text-green-500 text-3xl mb-2"><i class="fas fa-money-bill-wave"></i></div>
-            <div class="text-2xl font-bold">{{ total_students|default:"0" }}</div>
-            <div class="text-gray-500">Total Siswa</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <div class="text-green-500 text-2xl sm:text-3xl mb-1 sm:mb-2"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_students|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Total Siswa</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <div class="text-yellow-500 text-3xl mb-2"><i class="fas fa-check-circle"></i></div>
-            <div class="text-2xl font-bold">{{ total_paid|default:"0" }}</div>
-            <div class="text-gray-500">Pembayaran Lunas</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <div class="text-yellow-500 text-2xl sm:text-3xl mb-1 sm:mb-2"><i class="fas fa-check-circle"></i></div>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_paid|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Pembayaran Lunas</div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <div class="text-red-500 text-3xl mb-2"><i class="fas fa-clock"></i></div>
-            <div class="text-2xl font-bold">{{ total_unpaid|default:"0" }}</div>
-            <div class="text-gray-500">Belum Dibayar</div>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <div class="text-red-500 text-2xl sm:text-3xl mb-1 sm:mb-2"><i class="fas fa-clock"></i></div>
+            <div class="text-xl sm:text-2xl font-bold">{{ total_unpaid|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Belum Dibayar</div>
         </div>
     </div>
 
     {% if total_unread_blast %}
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-center justify-between">
+    <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 justify-between">
         <div>
-            <p class="font-semibold text-red-800"><i class="fas fa-envelope mr-1"></i>{{ total_unread_blast }} Pesan Blast Email Belum Dibaca Parent</p>
-            <p class="text-red-600 text-sm">Orang tua/wali murid belum membaca informasi pembayaran</p>
+            <p class="font-semibold text-red-800 text-sm sm:text-base"><i class="fas fa-envelope mr-1"></i>{{ total_unread_blast }} Pesan Blast Email Belum Dibaca Parent</p>
+            <p class="text-red-600 text-xs sm:text-sm">Orang tua/wali murid belum membaca informasi pembayaran</p>
         </div>
-        <a href="{% url 'accounts:internal_info_list' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700">Lihat Detail</a>
+        <a href="{% url 'accounts:internal_info_list' %}" class="bg-red-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm hover:bg-red-700 whitespace-nowrap">Lihat Detail</a>
     </div>
     {% endif %}
 
     {% if spp_reports_pending or dpp_reports_pending or eca_reports_pending %}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {% if spp_reports_pending %}<a href="{% url 'finance:spp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl hover:bg-yellow-100"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan SPP perlu review: <strong>{{ spp_reports_pending }}</strong></a>{% endif %}
-        {% if dpp_reports_pending %}<a href="{% url 'finance:dpp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl hover:bg-yellow-100"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan DPP perlu review: <strong>{{ dpp_reports_pending }}</strong></a>{% endif %}
-        {% if eca_reports_pending %}<a href="{% url 'eca:eca_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl hover:bg-yellow-100"><i class="fas fa-chart-pie text-yellow-600 mr-2"></i> Laporan ECA perlu review: <strong>{{ eca_reports_pending }}</strong></a>{% endif %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        {% if spp_reports_pending %}<a href="{% url 'finance:spp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl hover:bg-yellow-100 text-sm"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan SPP perlu review: <strong>{{ spp_reports_pending }}</strong></a>{% endif %}
+        {% if dpp_reports_pending %}<a href="{% url 'finance:dpp_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl hover:bg-yellow-100 text-sm"><i class="fas fa-file-alt text-yellow-600 mr-2"></i> Laporan DPP perlu review: <strong>{{ dpp_reports_pending }}</strong></a>{% endif %}
+        {% if eca_reports_pending %}<a href="{% url 'eca:eca_report_list' %}" class="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-xl hover:bg-yellow-100 text-sm"><i class="fas fa-chart-pie text-yellow-600 mr-2"></i> Laporan ECA perlu review: <strong>{{ eca_reports_pending }}</strong></a>{% endif %}
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4">Statistik SPP</h2>
-            <canvas id="sppChart" height="200"></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Statistik SPP</h2>
+            <div class="relative w-full" style="max-width:100%"><canvas id="sppChart" class="w-full"></canvas></div>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-lg font-semibold mb-4">Distribusi ECA</h2>
-            <canvas id="ecaChart" height="200"></canvas>
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+            <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Distribusi ECA</h2>
+            <div class="relative w-full" style="max-width:100%"><canvas id="ecaChart" class="w-full"></canvas></div>
         </div>
     </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-md">
-        <h2 class="text-lg font-semibold mb-4">Rekap Pembayaran Per Bulan</h2>
-        <canvas id="timeSeriesChart" height="100"></canvas>
+    <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md">
+        <h2 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Rekap Pembayaran Per Bulan</h2>
+        <div class="relative w-full" style="max-width:100%"><canvas id="timeSeriesChart" class="w-full"></canvas></div>
     </div>
 </div>
 

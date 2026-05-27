@@ -39,5 +39,6 @@ urlpatterns = [
     path('internal-info/<int:pk>/delete/', views.internal_info_delete, name='internal_info_delete'),
     path('internal-info/<int:pk>/approve/', views.internal_info_approve, name='internal_info_approve'),
     path('personal-info/', views.personal_info_list, name='personal_info_list'),
+    path('set-academic-year/', views.set_academic_year, name='set_academic_year'),
     path('blast-statistics/', views.blast_statistics, name='blast_statistics'),
 ]

@@ -1,76 +1,76 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard ECA{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold">Dashboard ECA</h1>
+<div class="max-w-7xl mx-auto px-2 sm:px-0">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
+        <h1 class="text-xl sm:text-2xl font-bold">Dashboard ECA</h1>
         <div class="flex gap-2">
-            <a href="{% url 'eca:export_participants_xlsx' %}" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
-            <a href="{% url 'eca:export_participants_pdf' %}" class="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+            <a href="{% url 'eca:export_participants_xlsx' %}" class="bg-green-600 text-white px-3 py-1.5 rounded text-xs sm:text-sm hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i>XLSX</a>
+            <a href="{% url 'eca:export_participants_pdf' %}" class="bg-red-600 text-white px-3 py-1.5 rounded text-xs sm:text-sm hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div class="bg-white p-3 sm:p-5 rounded-xl shadow-md border-l-4 border-blue-500">
             <div class="text-xs text-gray-500 uppercase">Total Revenue</div>
-            <div class="text-2xl font-bold text-blue-600">Rp{{ total_revenue|floatformat:0|default:'0' }}</div>
+            <div class="text-lg sm:text-2xl font-bold text-blue-600 truncate">Rp{{ total_revenue|floatformat:0|default:'0' }}</div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500">
-            <div class="text-xs text-gray-500 uppercase">Pemasukan Diverifikasi (TU)</div>
-            <div class="text-2xl font-bold text-green-600">Rp{{ verified_income|floatformat:0|default:'0' }}</div>
+        <div class="bg-white p-3 sm:p-5 rounded-xl shadow-md border-l-4 border-green-500">
+            <div class="text-xs text-gray-500 uppercase">Diverifikasi TU</div>
+            <div class="text-lg sm:text-2xl font-bold text-green-600 truncate">Rp{{ verified_income|floatformat:0|default:'0' }}</div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-orange-500">
-            <div class="text-xs text-gray-500 uppercase">Dana Digunakan (Laporan)</div>
-            <div class="text-2xl font-bold text-orange-600">Rp{{ total_spent|floatformat:0|default:'0' }}</div>
+        <div class="bg-white p-3 sm:p-5 rounded-xl shadow-md border-l-4 border-orange-500">
+            <div class="text-xs text-gray-500 uppercase">Digunakan</div>
+            <div class="text-lg sm:text-2xl font-bold text-orange-600 truncate">Rp{{ total_spent|floatformat:0|default:'0' }}</div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-purple-500">
+        <div class="bg-white p-3 sm:p-5 rounded-xl shadow-md border-l-4 border-purple-500">
             <div class="text-xs text-gray-500 uppercase">Sisa Anggaran</div>
-            <div class="text-2xl font-bold text-purple-600">Rp{{ remaining_budget|floatformat:0|default:'0' }}</div>
+            <div class="text-lg sm:text-2xl font-bold text-purple-600 truncate">Rp{{ remaining_budget|floatformat:0|default:'0' }}</div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white p-4 rounded-xl shadow-md text-center">
-            <div class="text-2xl font-bold">{{ total_types|default:"0" }}</div>
-            <div class="text-sm text-gray-500">Jenis ECA</div>
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-md text-center">
+            <div class="text-lg sm:text-2xl font-bold">{{ total_types|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Jenis ECA</div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-md text-center">
-            <div class="text-2xl font-bold">{{ total_programs|default:"0" }}</div>
-            <div class="text-sm text-gray-500">Program Aktif</div>
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-md text-center">
+            <div class="text-lg sm:text-2xl font-bold">{{ total_programs|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Program Aktif</div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-md text-center">
-            <div class="text-2xl font-bold">{{ total_registrations|default:"0" }}</div>
-            <div class="text-sm text-gray-500">Pendaftaran</div>
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-md text-center">
+            <div class="text-lg sm:text-2xl font-bold">{{ total_registrations|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Pendaftaran</div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-md text-center">
-            <div class="text-2xl font-bold">{{ eca_available|default:"0" }}</div>
-            <div class="text-sm text-gray-500">Kuota Tersedia</div>
+        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-md text-center">
+            <div class="text-lg sm:text-2xl font-bold">{{ eca_available|default:"0" }}</div>
+            <div class="text-xs sm:text-sm text-gray-500">Kuota Tersedia</div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-5 rounded-xl shadow-md">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-md">
             <h2 class="text-sm font-semibold mb-3">Pendaftaran per Program</h2>
-            <canvas id="regChart" height="200"></canvas>
+            <div class="relative w-full" style="max-width:100%"><canvas id="regChart" class="w-full"></canvas></div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-md">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-md">
             <h2 class="text-sm font-semibold mb-3">Akses Cepat</h2>
             <div class="grid grid-cols-2 gap-2">
-                <a href="{% url 'eca:create_type' %}" class="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 text-center text-sm">
-                    <i class="fas fa-plus text-blue-600 text-xl"></i>
-                    <div>Jenis ECA Baru</div>
+                <a href="{% url 'eca:create_type' %}" class="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 text-center text-xs sm:text-sm">
+                    <i class="fas fa-plus text-blue-600 text-lg sm:text-xl"></i>
+                    <div>Jenis Baru</div>
                 </a>
-                <a href="{% url 'eca:create_program' %}" class="p-3 bg-green-50 rounded-lg hover:bg-green-100 text-center text-sm">
-                    <i class="fas fa-plus text-green-600 text-xl"></i>
+                <a href="{% url 'eca:create_program' %}" class="p-3 bg-green-50 rounded-lg hover:bg-green-100 text-center text-xs sm:text-sm">
+                    <i class="fas fa-plus text-green-600 text-lg sm:text-xl"></i>
                     <div>Program Baru</div>
                 </a>
-                <a href="{% url 'eca:registration_list' %}" class="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 text-center text-sm">
-                    <i class="fas fa-list text-purple-600 text-xl"></i>
-                    <div>Lihat Pendaftaran</div>
+                <a href="{% url 'eca:registration_list' %}" class="p-3 bg-purple-50 rounded-lg hover:bg-purple-100 text-center text-xs sm:text-sm">
+                    <i class="fas fa-list text-purple-600 text-lg sm:text-xl"></i>
+                    <div>Pendaftaran</div>
                 </a>
-                <a href="{% url 'eca:export_participants_xlsx' %}" class="p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 text-center text-sm">
-                    <i class="fas fa-download text-yellow-600 text-xl"></i>
-                    <div>Download Peserta</div>
+                <a href="{% url 'eca:export_participants_xlsx' %}" class="p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 text-center text-xs sm:text-sm">
+                    <i class="fas fa-download text-yellow-600 text-lg sm:text-xl"></i>
+                    <div>Download</div>
                 </a>
             </div>
         </div>

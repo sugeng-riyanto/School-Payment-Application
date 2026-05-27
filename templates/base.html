@@ -1,208 +1,250 @@
+{% load i18n_extra %}
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ school.name|default:'Aplikasi Pembayaran Sekolah' }}{% endblock %}</title>
+    <title>{% block title %}{% t "Dashboard" %} - {{ school.name|default:'School' }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
     {% if school.logo %}<link rel="icon" type="image/png" href="{{ school.logo.url }}">{% endif %}
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex flex-col">
     {% if user.is_authenticated %}
-    <nav class="bg-white shadow-lg border-b">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <button id="sidebarToggle" class="mr-3 text-gray-500 hover:text-gray-700 lg:hidden">
-                        <i class="fas fa-bars text-xl"></i>
+    <nav class="bg-white shadow-lg border-b sticky top-0 z-40">
+        <div class="px-2 sm:px-4 lg:px-6">
+            <div class="flex justify-between h-14 sm:h-16">
+                <div class="flex items-center min-w-0">
+                    <button id="sidebarToggle" class="mr-2 text-gray-500 hover:text-gray-700 lg:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Toggle sidebar">
+                        <i class="fas fa-bars text-lg"></i>
                     </button>
-                    <a href="{% url 'accounts:dashboard' %}" class="flex items-center gap-2 text-xl font-bold text-blue-600">
-                        {% if school.logo %}<img src="{{ school.logo.url }}" alt="{{ school.name }}" class="h-8 w-8 rounded-full object-cover">{% endif %}
-                        <span class="hidden sm:inline">{{ school.name|default:'Sekolah' }}</span>
-                        <span class="sm:hidden">{{ school.name|default:'Sekolah'|truncatewords:1 }}</span>
+                    <a href="{% url 'accounts:dashboard' %}" class="flex items-center gap-2 text-lg sm:text-xl font-bold text-blue-600 truncate">
+                        {% if school.logo %}<img src="{{ school.logo.url }}" alt="{{ school.name }}" class="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover flex-shrink-0">{% endif %}
+                        <span class="hidden sm:inline truncate">{{ school.name|default:'School' }}</span>
+                        <span class="sm:hidden truncate">{{ school.name|default:'School'|truncatewords:1 }}</span>
                     </a>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">
+                <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                    {% lang_code as LC %}
+                    <div class="relative" id="langDropdown">
+                        <button onclick="document.getElementById('langMenu2').classList.toggle('hidden')" class="flex items-center gap-1 px-2 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                            {% if LC == 'id' %}<span class="fi fi-id fis rounded-sm shadow-sm"></span>
+                            {% elif LC == 'zh-hans' %}<span class="fi fi-cn fis rounded-sm shadow-sm"></span>
+                            {% else %}<span class="fi fi-us fis rounded-sm shadow-sm"></span>{% endif %}
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="langMenu2" class="hidden absolute right-0 mt-1 bg-white border rounded-lg shadow-lg py-1 w-36 sm:w-44 z-50">
+                            <a href="{% url 'public_info:set_language' %}?lang=en&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if LC == 'en' %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <span class="fi fi-us fis rounded-sm shadow-sm"></span>English
+                            </a>
+                            <a href="{% url 'public_info:set_language' %}?lang=id&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if LC == 'id' %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <span class="fi fi-id fis rounded-sm shadow-sm"></span>Indonesia
+                            </a>
+                            <a href="{% url 'public_info:set_language' %}?lang=zh-hans&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if LC == 'zh-hans' %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <span class="fi fi-cn fis rounded-sm shadow-sm"></span>简体中文
+                            </a>
+                        </div>
+                    </div>
+                    <span class="hidden sm:inline text-xs text-gray-500" id="liveClock"></span>
+                    <div class="relative hidden sm:inline-block" id="yearDropdown">
+                        <button onclick="document.getElementById('yearMenu').classList.toggle('hidden')" class="flex items-center gap-1 px-2 py-1.5 text-xs sm:text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition whitespace-nowrap">
+                            <i class="fas fa-calendar-alt text-blue-500 mr-1"></i>
+                            <span>{{ active_academic_year.name|default:'Tahun Ajaran' }}</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="yearMenu" class="hidden absolute right-0 mt-1 bg-white border rounded-lg shadow-lg py-1 w-48 z-50">
+                            {% for y in academic_years %}
+                            <a href="{% url 'accounts:set_academic_year' %}?year_id={{ y.id }}&next={{ request.path }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 {% if y.id == active_academic_year.id %}bg-blue-50 text-blue-700 font-medium{% endif %}">
+                                <i class="fas {% if y.is_active %}fa-check-circle text-green-500{% else %}fa-circle text-gray-300{% endif %} text-xs"></i>
+                                {{ y.name }}
+                            </a>
+                            {% empty %}
+                            <div class="px-4 py-2 text-sm text-gray-400">Belum ada tahun ajaran</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <span class="hidden sm:inline text-xs sm:text-sm text-gray-600">
                         <i class="fas fa-user mr-1"></i>{{ user.get_full_name|default:user.username }}
-                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 ml-1">{{ user.get_role_display }}</span>
+                        <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 ml-1">{{ user.get_role_display }}</span>
+                        {% if request.session.is_demo %}<span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 ml-1"><i class="fas fa-flask mr-0.5"></i>{% t "Demo" %}</span>{% endif %}
                     </span>
-                    <a href="{% url 'accounts:profile' %}" class="text-gray-500 hover:text-gray-700"><i class="fas fa-cog"></i></a>
-                    <a href="{% url 'accounts:logout' %}" class="text-red-500 hover:text-red-700"><i class="fas fa-sign-out-alt"></i></a>
+                    <a href="{% url 'accounts:profile' %}" class="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100" title="{% t 'Settings' %}"><i class="fas fa-cog"></i></a>
+                    <a href="{% url 'accounts:logout' %}" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-gray-100" title="{% t 'Logout' %}"><i class="fas fa-sign-out-alt"></i></a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="flex">
-        <aside id="sidebar" class="w-64 bg-white shadow-lg min-h-screen border-r transition-all duration-300 lg:block {% if not user.is_authenticated %}hidden{% endif %}">
-            <nav class="p-4 space-y-2">
-                <a href="{% url 'accounts:dashboard' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600">
-                    <i class="fas fa-tachometer-alt w-6"></i><span>Dashboard</span>
+    <div class="flex flex-1 relative">
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden transition-opacity duration-300"></div>
+        <aside id="sidebar" class="w-64 bg-white shadow-lg min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] border-r transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static fixed left-0 top-14 sm:top-16 z-30 {% if not user.is_authenticated %}hidden{% endif %} -translate-x-full lg:!translate-x-0">
+            <nav class="p-3 sm:p-4 space-y-1 overflow-y-auto h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
+                <a href="{% url 'accounts:dashboard' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base">
+                    <i class="fas fa-tachometer-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Dashboard" %}</span>
                 </a>
 
                 {% if user.role == 'admin' or user.role == 'tu' %}
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Master Data</span>
-                    <a href="{% url 'accounts:grade_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-layer-group w-6"></i><span>Jenjang</span></a>
-                    <a href="{% url 'accounts:class_grade_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-school w-6"></i><span>Kelas</span></a>
-                    <a href="{% url 'accounts:academic_year_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-calendar-alt w-6"></i><span>Tahun Ajaran</span></a>
-                    <a href="{% url 'accounts:grade_promotion' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-arrow-up w-6"></i><span>Kenaikan Kelas</span></a>
-                    <a href="{% url 'accounts:graduation_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-graduation-cap w-6"></i><span>Pernyataan Lulus</span></a>
-                    <a href="{% url 'finance:compensation_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-percent w-6"></i><span>Kompensasi</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Master Data" %}</span>
+                    <a href="{% url 'accounts:grade_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-layer-group w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Grades" %}</span></a>
+                    <a href="{% url 'accounts:class_grade_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-school w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Classes" %}</span></a>
+                    <a href="{% url 'accounts:academic_year_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-calendar-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Academic Year" %}</span></a>
+                    <a href="{% url 'accounts:grade_promotion' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-arrow-up w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Grade Promotion" %}</span></a>
+                    <a href="{% url 'accounts:graduation_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-graduation-cap w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Graduation" %}</span></a>
+                    <a href="{% url 'finance:compensation_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-percent w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Compensation" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Manajemen User</span>
-                    <a href="{% url 'accounts:user_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-users-cog w-6"></i><span>Daftar User</span></a>
-                    <a href="{% url 'accounts:import_students' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-users w-6"></i><span>Import Siswa + PIC</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "User Management" %}</span>
+                    <a href="{% url 'accounts:user_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-users-cog w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Users" %}</span></a>
+                    <a href="{% url 'accounts:import_students' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-users w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Import" %} {% t "Students" %} + PIC</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Tarif</span>
-                    <a href="{% url 'finance:spp_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-money-bill-wave w-6"></i><span>Tarif SPP</span></a>
-                    <a href="{% url 'finance:cambridge_fee_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-pound-sign w-6"></i><span>Tarif Cambridge</span></a>
-                    <a href="{% url 'finance:dpp_list' %}?filter=all" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-building w-6"></i><span>Tarif DPP</span></a>
-                    <a href="{% url 'finance:create_kegiatan' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-calendar-day w-6"></i><span>Uang Kegiatan</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Payment" %}</span>
+                    <a href="{% url 'finance:spp_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-money-bill-wave w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "SPP" %} {% t "Tarif" %}</span></a>
+                    <a href="{% url 'finance:cambridge_fee_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-pound-sign w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Cambridge" %} {% t "Tarif" %}</span></a>
+                    <a href="{% url 'finance:dpp_list' %}?filter=all" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-building w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "DPP Pembangunan" %}</span></a>
+                    <a href="{% url 'finance:create_kegiatan' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-calendar-day w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Uang Kegiatan" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Approval Pembayaran</span>
-                    <a href="{% url 'finance:spp_bill_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-file-invoice w-6"></i><span>Tagihan SPP</span></a>
-                    <a href="{% url 'finance:dpp_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-building w-6"></i><span>DPP Pembangunan</span></a>
-                    <a href="{% url 'finance:kegiatan_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-calendar-day w-6"></i><span>Uang Kegiatan</span></a>
-                    <a href="{% url 'finance:cambridge_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-globe w-6"></i><span>Cambridge Assessment</span></a>
-                    <a href="{% url 'eca:registration_management' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-users w-6"></i><span>Verifikasi ECA</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Approval" %}</span>
+                    <a href="{% url 'finance:spp_bill_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-file-invoice w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "SPP" %} {% t "Bill" %}</span></a>
+                    <a href="{% url 'finance:dpp_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-building w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "DPP Pembangunan" %}</span></a>
+                    <a href="{% url 'finance:kegiatan_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-calendar-day w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Uang Kegiatan" %}</span></a>
+                    <a href="{% url 'finance:cambridge_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-globe w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Cambridge" %} {% t "Assessment" %}</span></a>
+                    <a href="{% url 'eca:registration_management' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-users w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Verification" %} ECA</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Laporan</span>
-                    <a href="{% url 'finance:spp_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-file-alt w-6"></i><span>Laporan SPP</span></a>
-                    <a href="{% url 'finance:dpp_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-file-alt w-6"></i><span>Laporan DPP</span></a>
-                    <a href="{% url 'finance:payment_recap' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-bar w-6"></i><span>Rekap Pembayaran</span></a>
-                    <a href="{% url 'finance:payment_history' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-history w-6"></i><span>History Pembayaran</span></a>
-                    <a href="{% url 'finance:comparison_charts' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-bar w-6"></i><span>Komparasi Tahunan</span></a>
-                    <a href="{% url 'finance:reminder_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-bell w-6"></i><span>Laporan Peringatan</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Report" %}</span>
+                    <a href="{% url 'finance:spp_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-file-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} {% t "SPP" %}</span></a>
+                    <a href="{% url 'finance:dpp_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-file-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} {% t "DPP" %}</span></a>
+                    <a href="{% url 'finance:payment_recap' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-bar w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Payment Recap" %}</span></a>
+                    <a href="{% url 'finance:payment_history' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-history w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Payment History" %}</span></a>
+                    <a href="{% url 'finance:comparison_charts' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-bar w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Annual Comparison" %}</span></a>
+                    <a href="{% url 'finance:reminder_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-bell w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Reminder" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Pengaturan</span>
-                    <a href="{% url 'finance:discount_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-tags w-6"></i><span>Diskon</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Settings" %}</span>
+                    <a href="{% url 'finance:discount_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-tags w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Discount" %}</span></a>
                     {% if user.role == 'admin' %}
-                    <a href="{% url 'payments:midtrans_config' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-credit-card w-6"></i><span>Midtrans</span></a>
+                    <a href="{% url 'payments:midtrans_config' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-credit-card w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Midtrans" %}</span></a>
                     {% endif %}
-                    <a href="{% url 'payments:verify_invoice' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-qrcode w-6"></i><span>Verifikasi Invoice</span></a>
-                    <a href="{% url 'finance:blast_email' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-envelope w-6"></i><span>Blast Email</span></a>
-                    <a href="{% url 'finance:bank_account_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-university w-6"></i><span>Rekening Bank</span></a>
+                    <a href="{% url 'payments:verify_invoice' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-qrcode w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Verification" %}</span></a>
+                    <a href="{% url 'finance:blast_email' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-envelope w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Blast Email" %}</span></a>
+                    <a href="{% url 'finance:bank_account_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-university w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Bank Accounts" %}</span></a>
                 </div>
                 {% endif %}
 
                 {% if user.role == 'kepsek' %}
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Persetujuan</span>
-                    <a href="{% url 'finance:bank_account_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-check-double w-6"></i><span>Rekening Bank</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Approval" %}</span>
+                    <a href="{% url 'finance:bank_account_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-check-double w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Bank Accounts" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Laporan</span>
-                    <a href="{% url 'finance:spp_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-file-alt w-6"></i><span>Laporan SPP</span></a>
-                    <a href="{% url 'finance:dpp_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-file-alt w-6"></i><span>Laporan DPP</span></a>
-                    <a href="{% url 'eca:eca_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-pie w-6"></i><span>Laporan ECA</span></a>
-                    <a href="{% url 'finance:payment_recap' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-bar w-6"></i><span>Rekap Pembayaran</span></a>
-                    <a href="{% url 'finance:payment_history' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-history w-6"></i><span>History Pembayaran</span></a>
-                    <a href="{% url 'finance:comparison_charts' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-bar w-6"></i><span>Komparasi Tahunan</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Report" %}</span>
+                    <a href="{% url 'finance:spp_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-file-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} {% t "SPP" %}</span></a>
+                    <a href="{% url 'finance:dpp_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-file-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} {% t "DPP" %}</span></a>
+                    <a href="{% url 'eca:eca_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-pie w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} ECA</span></a>
+                    <a href="{% url 'finance:payment_recap' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-bar w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Payment Recap" %}</span></a>
+                    <a href="{% url 'finance:payment_history' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-history w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Payment History" %}</span></a>
+                    <a href="{% url 'finance:comparison_charts' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-bar w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Annual Comparison" %}</span></a>
                 </div>
                 {% endif %}
 
                 {% if user.role == 'admin' or user.role == 'eca_director' %}
                 <div class="border-t pt-2 mt-2">
                     <span class="text-xs text-gray-400 uppercase tracking-wider px-3">ECA</span>
-                    <a href="{% url 'eca:type_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-tag w-6"></i><span>Jenis ECA</span></a>
-                    <a href="{% url 'eca:program_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-calendar-alt w-6"></i><span>Program ECA</span></a>
-                    <a href="{% url 'eca:registration_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-users w-6"></i><span>Pendaftaran ECA</span></a>
-                    <a href="{% url 'eca:registration_management' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-check-double w-6"></i><span>Verifikasi Pendaftaran</span></a>
-                    <a href="{% url 'eca:score_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-star w-6"></i><span>Nilai ECA</span></a>
-                    <a href="{% url 'eca:eca_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-pie w-6"></i><span>Laporan ECA</span></a>
+                    <a href="{% url 'eca:type_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-tag w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "ECA Type" %}</span></a>
+                    <a href="{% url 'eca:program_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-calendar-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "ECA Program" %}</span></a>
+                    <a href="{% url 'eca:registration_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-users w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "ECA Registration" %}</span></a>
+                    <a href="{% url 'eca:registration_management' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-check-double w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Verification" %} {% t "ECA Registration" %}</span></a>
+                    <a href="{% url 'eca:score_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-star w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "ECA Score" %}</span></a>
+                    <a href="{% url 'eca:eca_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-pie w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} ECA</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <a href="{% url 'accounts:download_template' 'eca_scores' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-download w-6"></i><span>Template Nilai ECA</span></a>
+                    <a href="{% url 'accounts:download_template' 'eca_scores' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-download w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Download Template" %} ECA</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Import Data</span>
-                    <a href="{% url 'eca:import_types' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-upload w-6"></i><span>Import Jenis ECA</span></a>
-                    <a href="{% url 'eca:import_programs' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-upload w-6"></i><span>Import Program ECA</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Import Data" %}</span>
+                    <a href="{% url 'eca:import_types' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-upload w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Import" %} {% t "ECA Type" %}</span></a>
+                    <a href="{% url 'eca:import_programs' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-upload w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Import" %} {% t "ECA Program" %}</span></a>
                 </div>
                 {% endif %}
 
                 {% if user.role == 'admin' or user.role == 'pic_teacher' or user.role == 'vp_activity' or user.role == 'kepsek' %}
                 {% if user.role == 'vp_activity' %}
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Jenis Kegiatan</span>
-                    <a href="{% url 'activities:type_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-tag w-6"></i><span>Daftar Jenis Kegiatan</span></a>
-                    <a href="{% url 'activities:import_types' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-upload w-6"></i><span>Import Jenis Kegiatan</span></a>
-                    <a href="{% url 'activities:download_type_template' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-download w-6"></i><span>Download Template</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Activity Type" %}</span>
+                    <a href="{% url 'activities:type_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-tag w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Activity Type" %}</span></a>
+                    <a href="{% url 'activities:import_types' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-upload w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Import" %} {% t "Activity Type" %}</span></a>
+                    <a href="{% url 'activities:download_type_template' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-download w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Download Template" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Laporan Keuangan</span>
-                    <a href="{% url 'eca:eca_report_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-chart-pie w-6"></i><span>Laporan ECA</span></a>
-                    <a href="{% url 'finance:payment_recap' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-bar w-6"></i><span>Rekap Pembayaran</span></a>
-                    <a href="{% url 'finance:payment_history' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-history w-6"></i><span>History Pembayaran</span></a>
-                    <a href="{% url 'finance:comparison_charts' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-chart-bar w-6"></i><span>Komparasi Tahunan</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Financial Report" %}</span>
+                    <a href="{% url 'eca:eca_report_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-chart-pie w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Report" %} ECA</span></a>
+                    <a href="{% url 'finance:payment_recap' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-bar w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Payment Recap" %}</span></a>
+                    <a href="{% url 'finance:payment_history' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-history w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Payment History" %}</span></a>
+                    <a href="{% url 'finance:comparison_charts' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-chart-bar w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Annual Comparison" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
                 {% endif %}
                 {% if user.role == 'admin' or user.role == 'pic_teacher' or user.role == 'kepsek' %}
                 <div class="border-t pt-2 mt-2">
                 {% endif %}
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Laporan Kegiatan</span>
-                    <a href="{% url 'activities:list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-clipboard-list w-6"></i><span>Semua Laporan</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Activity Report" %}</span>
+                    <a href="{% url 'activities:list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-clipboard-list w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "All" %} {% t "Report" %}</span></a>
                     {% if user.role == 'pic_teacher' or user.role == 'admin' %}
-                    <a href="{% url 'activities:create' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-plus w-6"></i><span>Buat Laporan</span></a>
+                    <a href="{% url 'activities:create' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-plus w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Create Report" %}</span></a>
                     {% endif %}
                 </div>
                 {% endif %}
 
                 {% if user.role == 'admin' or user.role == 'kepsek' or user.role == 'vp_activity' or user.role == 'tu' %}
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Download Laporan</span>
-                    <a href="{% url 'reports:export_spp_xlsx' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-file-excel w-6"></i><span>SPP (XLSX)</span></a>
-                    <a href="{% url 'reports:export_spp_pdf' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-file-pdf w-6"></i><span>SPP (PDF)</span></a>
-                    <a href="{% url 'reports:export_eca_xlsx' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-file-excel w-6"></i><span>ECA (XLSX)</span></a>
-                    <a href="{% url 'reports:export_dpp_xlsx' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-file-excel w-6"></i><span>DPP (XLSX)</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Download Report" %}</span>
+                    <a href="{% url 'reports:export_spp_xlsx' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-file-excel w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "SPP" %} (XLSX)</span></a>
+                    <a href="{% url 'reports:export_spp_pdf' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-file-pdf w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "SPP" %} ({% t "PDF" %})</span></a>
+                    <a href="{% url 'reports:export_eca_xlsx' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-file-excel w-5 sm:w-6 text-center"></i><span>ECA (XLSX)</span></a>
+                    <a href="{% url 'reports:export_dpp_xlsx' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-file-excel w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "DPP" %} (XLSX)</span></a>
                 </div>
                 {% endif %}
 
                 {% if user.role == 'admin' or user.role == 'kepsek' or user.role == 'vp_activity' or user.role == 'eca_director' %}
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Monitoring</span>
-                    <a href="{% url 'accounts:blast_statistics' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-chart-simple w-6"></i><span>Statistik Blast Email</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Statistics" %}</span>
+                    <a href="{% url 'accounts:blast_statistics' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-chart-simple w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Blast Email" %} {% t "Statistics" %}</span></a>
                 </div>
                 {% endif %}
 
                 {% if user.role == 'admin' or user.role == 'kepsek' %}
                 <div class="border-t pt-2 mt-2">
-                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">Compliance & Security</span>
-                    <a href="{% url 'compliance:dashboard' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-shield-alt w-6"></i><span>Dashboard Compliance</span></a>
-                    <a href="{% url 'compliance:audit_log_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-list w-6"></i><span>Audit Trail Log</span></a>
+                    <span class="text-xs text-gray-400 uppercase tracking-wider px-3">{% t "Compliance" %} & {% t "Security" %}</span>
+                    <a href="{% url 'compliance:dashboard' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-shield-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Compliance" %} {% t "Dashboard" %}</span></a>
+                    <a href="{% url 'compliance:audit_log_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-list w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Audit Trail" %}</span></a>
                 </div>
                 {% endif %}
 
                 {% if user.role == 'parent' %}
                 <div class="border-t pt-2 mt-2">
-                    <a href="{% url 'payments:history' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-receipt w-6"></i><span>Tagihan Saya</span></a>
-                    <a href="{% url 'eca:registration_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600"><i class="fas fa-plus-circle w-6"></i><span>Daftar ECA</span></a>
-                    <a href="{% url 'accounts:personal_info_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600">
-                        <i class="fas fa-envelope-open-text w-6"></i><span>Informasi Personal</span>
+                    <a href="{% url 'payments:history' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-receipt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "My Bills" %}</span></a>
+                    <a href="{% url 'eca:registration_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base"><i class="fas fa-plus-circle w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Register ECA" %}</span></a>
+                    <a href="{% url 'accounts:personal_info_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm sm:text-base">
+                        <i class="fas fa-envelope-open-text w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Personal Info" %}</span>
                         {% if unread_blast_count %}<span class="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{{ unread_blast_count }}</span>{% endif %}
                     </a>
                 </div>
                 {% endif %}
                 <div class="border-t pt-2 mt-2">
-                    <a href="{% url 'calendars:list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-calendar-alt w-6"></i><span>Kalender Akademik</span></a>
+                    <a href="{% url 'calendars:list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-calendar-alt w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Calendar" %}</span></a>
                 </div>
                 <div class="border-t pt-2 mt-2">
-                    <a href="{% url 'accounts:internal_info_list' %}" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1"><i class="fas fa-info-circle w-6"></i><span>Informasi Internal</span></a>
+                    <a href="{% url 'accounts:internal_info_list' %}" class="flex items-center p-2.5 sm:p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 mt-1 text-sm sm:text-base"><i class="fas fa-info-circle w-5 sm:w-6 text-center"></i><span class="ml-2">{% t "Internal Info" %}</span></a>
                 </div>
             </nav>
         </aside>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-3 sm:p-4 lg:p-6 min-w-0">
     {% endif %}
 
     {% if messages %}
@@ -225,11 +267,57 @@
 
     <script>
         tailwind.config = { theme: { extend: { colors: { primary: {'50':'#eff6ff','100':'#dbeafe','200':'#bfdbfe','300':'#93c5fd','400':'#60a5fa','500':'#3b82f6','600':'#2563eb','700':'#1d4ed8','800':'#1e40af','900':'#1e3a8a'} } } } };
-        // Sidebar toggle for mobile
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+        // Sidebar toggle for mobile with overlay
+        document.getElementById('sidebarToggle')?.addEventListener('click', function(e) {
+            e.stopPropagation();
             const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('hidden');
-            sidebar.classList.toggle('lg:block');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay?.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay?.classList.add('hidden');
+            }
+        });
+        document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.add('-translate-x-full');
+            document.getElementById('sidebarOverlay')?.classList.add('hidden');
+        });
+        // Handle window resize: show sidebar on large screens
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth >= 1024) {
+                sidebar?.classList.remove('-translate-x-full');
+                overlay?.classList.add('hidden');
+            } else {
+                sidebar?.classList.add('-translate-x-full');
+                overlay?.classList.add('hidden');
+            }
+        });
+        // Live clock in Jakarta time
+        function updateClock() {
+            const el = document.getElementById('liveClock');
+            if (el) {
+                const opts = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                el.textContent = new Date().toLocaleTimeString('id-ID', opts) + ' WIB';
+            }
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+        // Close sidebar on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (!sidebar?.classList.contains('-translate-x-full')) {
+                    sidebar?.classList.add('-translate-x-full');
+                    overlay?.classList.add('hidden');
+                }
+            }
         });
     </script>
     {% block extra_scripts %}{% endblock %}

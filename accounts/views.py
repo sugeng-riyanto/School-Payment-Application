@@ -28,11 +28,65 @@ def login_view(request):
 
 
 def logout_view(request):
+    if request.user.is_authenticated and request.session.get('is_demo'):
+        _cleanup_demo_data(request)
     from compliance.middleware import AuditMiddleware
     if request.user.is_authenticated:
         AuditMiddleware.log_action(request, 'logout', 'User', request.user.id, request.user.username, f'User {request.user.username} logged out')
     logout(request)
+    request.session.pop('is_demo', None)
+    request.session.pop('demo_start', None)
+    request.session.pop('demo_role', None)
     return redirect('accounts:login')
+
+
+def _cleanup_demo_data(request):
+    from django.utils.dateparse import parse_datetime
+    from payments.models import PaymentTransaction, PaymentProof
+    from eca.models import ECARegistration, ECAProgram, ECAScore
+    from activities.models import ActivityReport, ActivityEvidence
+    from finance.models import BankAccount
+    user = request.user
+    role = request.session.get('demo_role')
+    raw = request.session.get('demo_start')
+    demo_start = parse_datetime(raw) if isinstance(raw, str) else raw
+    if not demo_start:
+        return
+
+    if role == 'parent':
+        sids = user.children.values_list('pk', flat=True)
+        PaymentProof.objects.filter(student_id__in=sids).delete()
+        PaymentTransaction.objects.filter(student_id__in=sids).delete()
+        ECARegistration.objects.filter(student_id__in=sids).delete()
+
+    elif role == 'tu':
+        ECARegistration.objects.filter(reviewed_by=user, reviewed_at__gte=demo_start).update(
+            status='pending', reviewed_by=None, reviewed_at=None)
+
+    elif role == 'kepsek':
+        BankAccount.objects.filter(approved_by=user, approved_at__gte=demo_start).update(
+            status='pending', is_active=False, approved_by=None, approved_at=None)
+        ActivityReport.objects.filter(feedback_by=user, feedback_at__gte=demo_start).update(
+            status='submitted', feedback_by=None, feedback_at=None, feedback_notes='')
+
+    elif role == 'eca_director':
+        for prog in ECAProgram.objects.filter(created_at__gte=demo_start):
+            ECAScore.objects.filter(program=prog).delete()
+            ECARegistration.objects.filter(program=prog).delete()
+            prog.delete()
+
+    elif role == 'vp_activity':
+        ActivityReport.objects.filter(reviewed_by=user, reviewed_at__gte=demo_start).update(
+            status='submitted', reviewed_by=None, reviewed_at=None)
+
+    elif role == 'pic_teacher':
+        for rpt in ActivityReport.objects.filter(pic=user, created_at__gte=demo_start):
+            ActivityEvidence.objects.filter(activity=rpt).delete()
+            rpt.delete()
+
+    from compliance.middleware import AuditMiddleware
+    AuditMiddleware.log_action(request, 'demo_cleanup', 'User', user.id, user.username,
+                               f'Demo [{role}] cleanup done')
 
 
 @login_required
@@ -340,6 +394,7 @@ def profile(request):
         alamat = request.POST.get('alamat', '').strip()
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
+        show_phone = request.POST.get('show_phone') == 'on'
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
 
@@ -352,6 +407,7 @@ def profile(request):
         user.alamat = alamat
         user.first_name = first_name
         user.last_name = last_name
+        user.show_phone = show_phone
         if request.FILES.get('avatar'):
             user.avatar = request.FILES['avatar']
         user.save()
@@ -1178,6 +1234,17 @@ def internal_info_approve(request, pk):
 
 
 @login_required
+@login_required
+def set_academic_year(request):
+    year_id = request.GET.get('year_id')
+    next_url = request.GET.get('next', 'accounts:dashboard')
+    if year_id:
+        request.session['academic_year_id'] = int(year_id)
+    else:
+        request.session.pop('academic_year_id', None)
+    return redirect(next_url)
+
+
 def blast_statistics(request):
     if request.user.role not in ['admin', 'kepsek', 'vp_activity', 'eca_director']:
         messages.error(request, 'Akses ditolak.')

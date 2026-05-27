@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.http import HttpResponse
 import openpyxl
@@ -428,3 +429,75 @@ def public_verify_invoice(request):
                     result_type = 'export'
                     break
     return render(request, 'public_info/verify_invoice.html', {'result': result, 'code': code, 'result_type': result_type})
+
+
+def _create_demo_user(role):
+    from accounts.models import User, Student
+    mapping = {
+        'parent':      ('demo',       'demo123',     'parent',       '',        'Demo',      'Parent'),
+        'tu':          ('demo_tu',    'demo123',     'tu',           'sd_smp_sma', 'Demo',    'TU'),
+        'kepsek':      ('demo_kepsek','demo123',     'kepsek',       'sd',      'Demo',      'Kepsek'),
+        'eca_director':('demo_eca',   'demo123',     'eca_director', '',        'Demo',      'ECA'),
+        'vp_activity': ('demo_vp',    'demo123',     'vp_activity',  'sd',      'Demo',      'VP'),
+        'pic_teacher': ('demo_pic',   'demo123',     'pic_teacher',  'sd',      'Demo',      'PIC'),
+    }
+    uname, pwd, role, level, fn, ln = mapping[role]
+    u, created = User.objects.get_or_create(
+        username=uname,
+        defaults={
+            'role': role, 'assigned_level': level,
+            'email': f'{uname}@demo.com',
+            'first_name': fn, 'last_name': ln,
+            'phone': '081234567890', 'show_phone': True,
+            'alamat': 'Alamat Demo',
+        }
+    )
+    if created:
+        u.set_password(pwd)
+        u.save()
+    if role == 'parent':
+        from accounts.models import Grade, ClassGrade, AcademicYear
+        from django.utils import timezone
+        ay, _ = AcademicYear.objects.get_or_create(
+            name=f'Demo {timezone.now().year}',
+            defaults={'is_active': True, 'start_date': timezone.now().date(), 'end_date': timezone.now().date()}
+        )
+        for level, name in [('sd','Siswa Demo SD'),('smp','Siswa Demo SMP'),('sma','Siswa Demo SMA')]:
+            grade = Grade.objects.filter(level=level).first()
+            if not grade:
+                continue
+            cg, _ = ClassGrade.objects.get_or_create(
+                name=level.upper(), grade=grade, academic_year=ay,
+                defaults={'name': level.upper()}
+            )
+            Student.objects.get_or_create(
+                nis=f'DEMO{level.upper()}001',
+                defaults={'nisn': f'999999999{[chr(ord("a")+i) for i in range(3)][["sd","smp","sma"].index(level)]}',
+                          'parent': u, 'class_grade': cg, 'full_name': name}
+            )
+    return u
+
+
+@csrf_exempt
+def demo_selection(request):
+    if request.method == 'POST':
+        role = request.POST.get('role')
+        if role in ['parent','tu','kepsek','eca_director','vp_activity','pic_teacher']:
+            from django.contrib.auth import login as auth_login
+            from django.utils import timezone
+            user = _create_demo_user(role)
+            auth_login(request, user)
+            request.session['is_demo'] = True
+            request.session['demo_start'] = timezone.now().isoformat()
+            request.session['demo_role'] = role
+            messages.info(request, f'Mode Demo: {user.get_role_display()}. Perubahan akan dihapus saat logout.')
+            return redirect('accounts:dashboard')
+    return render(request, 'public_info/demo_selection.html')
+
+
+def set_language(request):
+    lang = request.GET.get('lang', 'en')
+    if lang in ['en', 'id', 'zh-hans']:
+        request.session['django_language'] = lang
+    next_url = request.GET.get('next', '/')
+    return redirect(next_url)

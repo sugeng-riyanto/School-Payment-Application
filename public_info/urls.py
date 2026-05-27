@@ -25,4 +25,6 @@ urlpatterns = [
     path('admin/guru/template/', views.download_teacher_template_xlsx, name='download_teacher_template'),
     path('admin/guru/import/', views.import_teachers_xlsx, name='import_teachers'),
     path('admin/guru/structure/', views.admin_teacher_structure, name='admin_teacher_structure'),
+    path('demo/', views.demo_selection, name='demo_login'),
+    path('lang/', views.set_language, name='set_language'),
 ]
