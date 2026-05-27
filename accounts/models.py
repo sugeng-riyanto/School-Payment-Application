@@ -72,6 +72,7 @@ class ClassGrade(models.Model):
     class Meta:
         verbose_name = 'Class'
         verbose_name_plural = 'Classes'
+        unique_together = ['name', 'grade', 'academic_year']
 
     def __str__(self):
         return f"{self.grade} - {self.name} ({self.academic_year})"

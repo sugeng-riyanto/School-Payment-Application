@@ -460,16 +460,15 @@ def _create_demo_user(role):
         from django.utils import timezone
         ay, _ = AcademicYear.objects.get_or_create(
             name=f'Demo {timezone.now().year}',
-            defaults={'is_active': True, 'start_date': timezone.now().date(), 'end_date': timezone.now().date()}
+            defaults={'is_active': False, 'start_date': timezone.now().date(), 'end_date': timezone.now().date()}
         )
         for level, name in [('sd','Siswa Demo SD'),('smp','Siswa Demo SMP'),('sma','Siswa Demo SMA')]:
             grade = Grade.objects.filter(level=level).first()
             if not grade:
                 continue
-            cg, _ = ClassGrade.objects.get_or_create(
-                name=level.upper(), grade=grade, academic_year=ay,
-                defaults={'name': level.upper()}
-            )
+            cg = ClassGrade.objects.filter(name=level.upper(), grade=grade, academic_year=ay).first()
+            if not cg:
+                cg = ClassGrade.objects.create(name=level.upper(), grade=grade, academic_year=ay)
             Student.objects.get_or_create(
                 nis=f'DEMO{level.upper()}001',
                 defaults={'nisn': f'999999999{[chr(ord("a")+i) for i in range(3)][["sd","smp","sma"].index(level)]}',
